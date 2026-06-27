@@ -1,7 +1,8 @@
 "use client";
 
-import { IconInfoCircle, IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
+import { IconInfoCircle, IconPlus, IconUpload } from "@tabler/icons-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +13,64 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { LOGO_GUIDANCE } from "@/lib/logo-guidance";
+import { sanitizeSvg } from "@/lib/svg-sanitize";
+import { cn } from "@/lib/utils";
+
+const SVG_EXTENSION = /\.svg$/i;
+const FILENAME_SEPARATORS = /[-_]+/g;
 
 interface CustomOutletFormProps {
+  initialName?: string;
+  initialSvg?: string;
   onAdd: (name: string, svg: string) => void;
 }
 
-export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
-  const [customName, setCustomName] = useState("");
-  const [customSvg, setCustomSvg] = useState("");
+function isSvgFile(file: File): boolean {
+  return (
+    file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg")
+  );
+}
+
+function nameFromFile(file: File): string {
+  return file.name
+    .replace(SVG_EXTENSION, "")
+    .replace(FILENAME_SEPARATORS, " ")
+    .trim();
+}
+
+export function CustomOutletForm({
+  onAdd,
+  initialName = "",
+  initialSvg = "",
+}: CustomOutletFormProps) {
+  const [customName, setCustomName] = useState(initialName);
+  const [customSvg, setCustomSvg] = useState(initialSvg);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const applySvgFile = async (file: File) => {
+    if (!isSvgFile(file)) {
+      toast.error("Please upload an SVG file");
+      return;
+    }
+
+    try {
+      const raw = await file.text();
+      const sanitized = sanitizeSvg(raw);
+
+      if (!sanitized) {
+        toast.error("That file doesn't look like a valid SVG logo");
+        return;
+      }
+
+      setCustomSvg(sanitized);
+      if (!customName.trim()) {
+        setCustomName(nameFromFile(file));
+      }
+    } catch {
+      toast.error("Could not read that file");
+    }
+  };
 
   const handleAdd = () => {
     if (!customName.trim()) {
@@ -32,10 +83,56 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
 
   return (
     <div className="flex flex-col gap-3">
+      <input
+        accept=".svg,image/svg+xml"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            applySvgFile(file).catch(() => undefined);
+          }
+          event.target.value = "";
+        }}
+        ref={fileInputRef}
+        type="file"
+      />
+
+      <button
+        className={cn(
+          "flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-5 text-center transition-colors",
+          isDragging
+            ? "border-primary bg-primary/5"
+            : "border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10"
+        )}
+        onClick={() => fileInputRef.current?.click()}
+        onDragLeave={() => setIsDragging(false)}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragging(false);
+          const file = event.dataTransfer.files[0];
+          if (file) {
+            applySvgFile(file).catch(() => undefined);
+          }
+        }}
+        type="button"
+      >
+        <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <IconUpload className="size-5" stroke={2} />
+        </span>
+        <span className="font-medium text-sm">Upload SVG logo</span>
+        <span className="text-muted-foreground text-xs">
+          Click or drop a file — transparent background works best
+        </span>
+      </button>
+
       <div className="grid gap-1.5">
         <Label htmlFor="custom-name">Outlet name</Label>
         <Input
-          autoFocus
+          autoFocus={!initialName}
           id="custom-name"
           onChange={(event) => setCustomName(event.target.value)}
           onKeyDown={(event) => {
@@ -50,7 +147,7 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
 
       <div className="grid gap-1.5">
         <div className="flex items-center gap-1.5">
-          <Label htmlFor="custom-svg">Logo SVG</Label>
+          <Label htmlFor="custom-svg">Or paste SVG code</Label>
           <Tooltip>
             <TooltipTrigger
               render={
@@ -76,9 +173,6 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
           rows={3}
           value={customSvg}
         />
-        <p className="text-muted-foreground text-xs">
-          Paste inline SVG with a transparent background for best results.
-        </p>
       </div>
 
       <Button
@@ -87,7 +181,7 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
         onClick={handleAdd}
       >
         <IconPlus stroke={2} />
-        Add outlet
+        Add to lineup
       </Button>
     </div>
   );

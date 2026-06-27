@@ -1,9 +1,7 @@
 "use client";
 
-import { IconEye, IconMoon, IconSun } from "@tabler/icons-react";
-import { useState } from "react";
+import { IconEye } from "@tabler/icons-react";
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
-import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -34,9 +32,9 @@ const alignmentClass = {
   right: "justify-end",
 } as const;
 
-function getContainerBg(config: PresswallConfig, isDark: boolean): string {
+function getContainerBg(config: PresswallConfig): string {
   if (config.backgroundColor === "transparent") {
-    return isDark ? "#111111" : "#ffffff";
+    return "#ffffff";
   }
   return config.backgroundColor;
 }
@@ -119,13 +117,11 @@ export function PresswallPreview({
   compact = false,
   isLoading = false,
 }: PreviewProps) {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const items = resolveStorefrontPublishers(config, catalog, selections);
-  const isDark = theme === "dark";
   const logoStyle = getLogoImageStyle(config);
 
   const containerStyle = {
-    backgroundColor: getContainerBg(config, isDark),
+    backgroundColor: getContainerBg(config),
     color: config.textColor,
     borderRadius: `${config.borderRadius}px`,
     padding: `${config.paddingY}px ${config.paddingX}px`,
@@ -159,38 +155,15 @@ export function PresswallPreview({
         compact && "rounded-lg border bg-card p-3"
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <IconEye className="size-3.5 text-muted-foreground" stroke={2} />
-          <span className="font-medium text-sm">Preview</span>
-        </div>
-        <div className="flex rounded-md border p-0.5">
-          <Button
-            aria-label="Light preview"
-            className="h-6 px-2"
-            onClick={() => setTheme("light")}
-            size="sm"
-            variant={theme === "light" ? "secondary" : "ghost"}
-          >
-            <IconSun className="size-3.5" stroke={2} />
-          </Button>
-          <Button
-            aria-label="Dark preview"
-            className="h-6 px-2"
-            onClick={() => setTheme("dark")}
-            size="sm"
-            variant={theme === "dark" ? "secondary" : "ghost"}
-          >
-            <IconMoon className="size-3.5" stroke={2} />
-          </Button>
-        </div>
+      <div className="flex items-center gap-1.5">
+        <IconEye className="size-3.5 text-muted-foreground" stroke={2} />
+        <span className="font-medium text-sm">Preview</span>
       </div>
 
       <div
         className={cn(
-          "rounded-lg border transition-opacity",
+          "rounded-lg border border-black/10 transition-opacity",
           compact ? "min-h-36" : "min-h-32",
-          isDark ? "border-white/10" : "border-black/10",
           isLoading && "animate-pulse opacity-60"
         )}
         style={containerStyle}

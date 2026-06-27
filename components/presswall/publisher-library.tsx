@@ -1,6 +1,6 @@
 "use client";
 
-import { IconCheck, IconSearch } from "@tabler/icons-react";
+import { IconSearch, IconUpload } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,18 +19,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { PublisherCatalogItem } from "@/lib/presswall-types";
+import type {
+  PublisherCatalogItem,
+  SelectedPublisher,
+} from "@/lib/presswall-types";
 import { PUBLISHER_CATEGORIES } from "@/lib/publishers-seed";
 import { cn } from "@/lib/utils";
 
+function buildSelectedOrderById(
+  selected: SelectedPublisher[]
+): Map<string, number> {
+  const orderById = new Map<string, number>();
+  let order = 1;
+
+  for (const item of selected) {
+    if (item.publisherId) {
+      orderById.set(item.publisherId, order);
+      order += 1;
+    }
+  }
+
+  return orderById;
+}
+
+function SelectionOrderBadge({ order }: { order: number }) {
+  return (
+    <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-primary font-medium text-[0.625rem] text-primary-foreground tabular-nums">
+      {order}
+    </span>
+  );
+}
+
 function PublisherCatalogList({
   filteredCatalog,
-  selectedIds,
+  selectedOrderById,
   onToggle,
   variant,
 }: {
   filteredCatalog: PublisherCatalogItem[];
-  selectedIds: Set<string>;
+  selectedOrderById: Map<string, number>;
   onToggle: (publisher: PublisherCatalogItem) => void;
   variant: "list" | "grid";
 }) {
@@ -49,36 +76,39 @@ function PublisherCatalogList({
 
   if (variant === "grid") {
     return (
-      <div className="grid grid-cols-2 gap-1.5 p-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3">
         {filteredCatalog.map((publisher) => {
-          const checked = selectedIds.has(publisher.id);
+          const order = selectedOrderById.get(publisher.id);
+          const isSelected = order !== undefined;
           return (
             <button
+              aria-label={
+                isSelected
+                  ? `${publisher.name}, position ${order}`
+                  : publisher.name
+              }
+              aria-pressed={isSelected}
               className={cn(
-                "group relative flex flex-col items-center gap-1.5 rounded-md border px-2 py-2.5 text-center transition-colors",
-                checked
+                "group relative flex min-h-[4.5rem] items-center justify-center rounded-lg border px-3 py-4 transition-colors",
+                isSelected
                   ? "border-primary/40 bg-primary/5"
                   : "border-transparent hover:border-border hover:bg-muted/50"
               )}
               key={publisher.id}
               onClick={() => onToggle(publisher)}
+              title={
+                isSelected ? `${publisher.name} · #${order}` : publisher.name
+              }
               type="button"
             >
-              {checked ? (
-                <span className="absolute top-1.5 right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <IconCheck className="size-2.5" stroke={3} />
-                </span>
-              ) : null}
-              <div className="flex h-7 w-full items-center justify-center">
+              {isSelected ? <SelectionOrderBadge order={order} /> : null}
+              <div className="flex h-9 w-full items-center justify-center">
                 <PublisherLogo
-                  className="[--logo-height:1.5rem]"
+                  className="[--logo-height:2rem]"
                   name={publisher.name}
                   publisherId={publisher.id}
                 />
               </div>
-              <span className="line-clamp-2 font-medium text-[0.6875rem] leading-tight">
-                {publisher.name}
-              </span>
             </button>
           );
         })}
@@ -89,33 +119,33 @@ function PublisherCatalogList({
   return (
     <div className="grid gap-0.5 p-1.5">
       {filteredCatalog.map((publisher) => {
-        const checked = selectedIds.has(publisher.id);
+        const order = selectedOrderById.get(publisher.id);
+        const isSelected = order !== undefined;
         return (
           <label
             className={cn(
-              "flex cursor-pointer items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 transition-colors hover:bg-muted/50",
-              checked && "border-border bg-muted/40"
+              "relative flex cursor-pointer items-center justify-center gap-2.5 rounded-md border border-transparent px-2.5 py-2 transition-colors hover:bg-muted/50",
+              isSelected && "border-border bg-muted/40"
             )}
             htmlFor={`publisher-${publisher.id}`}
             key={publisher.id}
+            title={
+              isSelected ? `${publisher.name} · #${order}` : publisher.name
+            }
           >
             <Checkbox
-              checked={checked}
+              checked={isSelected}
+              className="sr-only"
               id={`publisher-${publisher.id}`}
               onCheckedChange={() => onToggle(publisher)}
             />
-            <div className="flex h-7 w-20 shrink-0 items-center justify-center">
+            {isSelected ? <SelectionOrderBadge order={order} /> : null}
+            <div className="flex h-8 w-full items-center justify-center">
               <PublisherLogo
-                className="[--logo-height:1.5rem]"
+                className="[--logo-height:1.75rem]"
                 name={publisher.name}
                 publisherId={publisher.id}
               />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{publisher.name}</p>
-              <p className="text-muted-foreground text-xs">
-                {publisher.category}
-              </p>
             </div>
           </label>
         );
@@ -128,25 +158,52 @@ interface PublisherLibraryProps {
   catalog: PublisherCatalogItem[];
   category: string;
   listClassName?: string;
+  onAddCustom?: () => void;
   onCategoryChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onToggle: (publisher: PublisherCatalogItem) => void;
   search: string;
-  selectedIds: Set<string>;
+  selected: SelectedPublisher[];
   variant?: "list" | "grid";
+}
+
+function AddCustomOutletButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="flex w-full items-center gap-4 rounded-xl border-2 border-primary/30 border-dashed bg-primary/5 px-4 py-4 text-left transition-colors hover:border-primary/50 hover:bg-primary/10"
+      onClick={onClick}
+      type="button"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <IconUpload className="size-4" stroke={2} />
+      </span>
+      <span className="min-w-0 space-y-1">
+        <span className="block font-medium text-sm">Upload your own logo</span>
+        <span className="block text-muted-foreground text-xs leading-relaxed">
+          Podcast, local press, or any outlet not in the library
+        </span>
+      </span>
+    </button>
+  );
 }
 
 export function PublisherLibrary({
   catalog,
-  selectedIds,
+  selected,
   onToggle,
   search,
   onSearchChange,
   category,
   onCategoryChange,
+  onAddCustom,
   listClassName = "h-80",
-  variant = "list",
+  variant = "grid",
 }: PublisherLibraryProps) {
+  const selectedOrderById = useMemo(
+    () => buildSelectedOrderById(selected),
+    [selected]
+  );
+
   const filteredCatalog = useMemo(
     () =>
       catalog.filter((publisher) => {
@@ -163,15 +220,15 @@ export function PublisherLibrary({
   );
 
   return (
-    <div className="flex min-h-0 flex-col gap-2">
-      <div className="flex gap-2">
+    <div className="flex min-h-0 flex-col gap-4">
+      <div className="flex gap-3">
         <div className="relative min-w-0 flex-1">
           <IconSearch
             className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
             stroke={2}
           />
           <Input
-            className="h-8 pl-8 text-sm"
+            className="h-9 pl-8 text-sm"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search..."
             value={search}
@@ -181,7 +238,7 @@ export function PublisherLibrary({
           onValueChange={(value) => value && onCategoryChange(value)}
           value={category}
         >
-          <SelectTrigger className="h-8 w-[7.5rem] text-xs">
+          <SelectTrigger className="h-9 w-[8rem] text-xs">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -194,11 +251,13 @@ export function PublisherLibrary({
         </Select>
       </div>
 
+      {onAddCustom ? <AddCustomOutletButton onClick={onAddCustom} /> : null}
+
       <ScrollArea className={cn("rounded-lg border", listClassName)}>
         <PublisherCatalogList
           filteredCatalog={filteredCatalog}
           onToggle={onToggle}
-          selectedIds={selectedIds}
+          selectedOrderById={selectedOrderById}
           variant={variant}
         />
       </ScrollArea>

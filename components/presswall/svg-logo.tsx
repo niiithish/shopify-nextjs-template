@@ -1,20 +1,16 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { sanitizeSvg } from "@/lib/svg-sanitize";
 import { cn } from "@/lib/utils";
 
 const SVG_ROOT = /<svg[\s>]/i;
+const LOGO_COLOR = "#1a1a1a";
 
 interface SvgLogoProps {
   className?: string;
   style?: React.CSSProperties;
   svg: string;
-}
-
-function themeColor(resolvedTheme: string | undefined): string {
-  return resolvedTheme === "dark" ? "#fafafa" : "#1a1a1a";
 }
 
 function prepareInlineSvg(svg: string): string {
@@ -29,8 +25,6 @@ function prepareInlineSvg(svg: string): string {
 }
 
 export function SvgLogo({ svg, className, style }: SvgLogoProps) {
-  const { resolvedTheme } = useTheme();
-
   const html = useMemo(() => prepareInlineSvg(svg), [svg]);
 
   if (!(svg && html)) {
@@ -44,8 +38,7 @@ export function SvgLogo({ svg, className, style }: SvgLogoProps) {
         className
       )}
       dangerouslySetInnerHTML={{ __html: html }}
-      style={{ color: themeColor(resolvedTheme), ...style }}
-      suppressHydrationWarning
+      style={{ color: LOGO_COLOR, ...style }}
     />
   );
 }

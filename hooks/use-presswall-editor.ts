@@ -32,12 +32,13 @@ export interface PresswallEditor {
   isDirty: boolean;
   isLoading: boolean;
   isSaving: boolean;
-  movePublisher: (index: number, direction: -1 | 1) => void;
   removePublisher: (key: string) => void;
+  reorderPublisher: (fromIndex: number, toIndex: number) => void;
   save: () => Promise<void>;
   search: string;
   selected: SelectedPublisher[];
   selectedIds: Set<string>;
+  selectedOrderById: Map<string, number>;
   selections: ShopPublisherSelection[];
   setCategory: (value: string) => void;
   setSearch: (value: string) => void;
@@ -106,6 +107,20 @@ export function usePresswallEditor(): PresswallEditor {
     [selected]
   );
 
+  const selectedOrderById = useMemo(() => {
+    const orderById = new Map<string, number>();
+    let order = 1;
+
+    for (const item of selected) {
+      if (item.publisherId) {
+        orderById.set(item.publisherId, order);
+        order += 1;
+      }
+    }
+
+    return orderById;
+  }, [selected]);
+
   const catalogById = useMemo(
     () => new Map(catalog.map((item) => [item.id, item])),
     [catalog]
@@ -135,16 +150,21 @@ export function usePresswallEditor(): PresswallEditor {
     });
   }, []);
 
-  const movePublisher = useCallback((index: number, direction: -1 | 1) => {
+  const reorderPublisher = useCallback((fromIndex: number, toIndex: number) => {
     setSelected((current) => {
-      const next = [...current];
-      const target = index + direction;
-      if (target < 0 || target >= next.length) {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= current.length ||
+        toIndex >= current.length
+      ) {
         return current;
       }
-      const temp = next[index];
-      next[index] = next[target];
-      next[target] = temp;
+
+      const next = [...current];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
       return next;
     });
   }, []);
@@ -208,10 +228,11 @@ export function usePresswallEditor(): PresswallEditor {
     search,
     selected,
     selectedIds,
+    selectedOrderById,
     selections,
     unavailableCount,
     addCustomPublisher,
-    movePublisher,
+    reorderPublisher,
     removePublisher,
     save,
     setCategory,
