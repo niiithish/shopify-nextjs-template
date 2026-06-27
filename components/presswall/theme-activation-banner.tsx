@@ -89,29 +89,13 @@ export function ThemeActivationBanner({
           the editor.
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => {
-              window.open(status.activateEmbedUrl, "_top");
-            }}
-          >
-            Activate now
-          </Button>
-          <Button
-            onClick={() => {
-              window.open(status.activateSectionUrl, "_top");
-            }}
-            variant="outline"
-          >
-            Add as section block
-          </Button>
-        </div>
-
-        {status.themeName ? (
-          <p className="text-muted-foreground text-xs">
-            Checking theme: {status.themeName}
-          </p>
-        ) : null}
+        <Button
+          onClick={() => {
+            window.open(status.activateEmbedUrl, "_top");
+          }}
+        >
+          Activate now
+        </Button>
       </div>
     </div>
   );
