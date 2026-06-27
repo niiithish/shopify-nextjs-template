@@ -5,21 +5,17 @@ import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
+  IconArrowsMoveHorizontal,
+  IconColorFilter,
+  IconColorSwatch,
+  IconLayoutColumns,
+  IconLayoutGrid,
 } from "@tabler/icons-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +30,60 @@ function sliderValue(value: number | readonly number[]): number {
   }
   return value[0] ?? 0;
 }
+
+const HEX_COLOR_PATTERN = /^#[\da-f]{6}$/i;
+
+const LAYOUT_OPTIONS: {
+  description: string;
+  icon: Icon;
+  label: string;
+  value: PresswallConfig["layout"];
+}[] = [
+  {
+    value: "bar",
+    icon: IconLayoutColumns,
+    label: "Bar",
+    description: "Best for one clean row under a hero or product section.",
+  },
+  {
+    value: "grid",
+    icon: IconLayoutGrid,
+    label: "Grid",
+    description: "Best when you have many outlets and want equal weight.",
+  },
+  {
+    value: "marquee",
+    icon: IconArrowsMoveHorizontal,
+    label: "Marquee",
+    description: "Best for a compact moving trust strip.",
+  },
+];
+
+const COLOR_MODE_OPTIONS: {
+  description: string;
+  icon: Icon;
+  label: string;
+  value: PresswallConfig["colorMode"];
+}[] = [
+  {
+    value: "mono",
+    icon: IconColorFilter,
+    label: "Mono",
+    description: "Most polished for mixed media logos.",
+  },
+  {
+    value: "muted",
+    icon: IconColorSwatch,
+    label: "Muted",
+    description: "Soft grayscale for quieter sections.",
+  },
+  {
+    value: "color",
+    icon: IconColorSwatch,
+    label: "Color",
+    description: "Original brand colors for maximum recognition.",
+  },
+];
 
 const ALIGNMENT_OPTIONS: {
   value: PresswallConfig["alignment"];
@@ -53,21 +103,55 @@ interface StyleControlsProps {
   ) => void;
 }
 
+interface ColorInputProps {
+  id: string;
+  label: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  value: string;
+}
+
+function ColorInput({
+  id,
+  label,
+  value,
+  placeholder,
+  onChange,
+}: ColorInputProps) {
+  const colorPickerValue = HEX_COLOR_PATTERN.test(value) ? value : "#ffffff";
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <input
+          aria-label={`${label} color picker`}
+          className="absolute top-1/2 left-1.5 size-4 -translate-y-1/2 cursor-pointer rounded border border-border bg-transparent p-0"
+          onChange={(event) => onChange(event.target.value)}
+          type="color"
+          value={colorPickerValue}
+        />
+        <Input
+          className="pl-8 font-mono"
+          id={id}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          value={value}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function StyleControls({ config, onUpdate }: StyleControlsProps) {
   return (
-    <Tabs defaultValue="content">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="content">Content</TabsTrigger>
-        <TabsTrigger value="style">Style</TabsTrigger>
-        <TabsTrigger value="layout">Layout</TabsTrigger>
-      </TabsList>
-
-      <TabsContent className="mt-4 flex flex-col gap-4" value="content">
-        <div className="flex items-center justify-between rounded-lg border p-3">
+    <div className="grid gap-6">
+      <section className="grid gap-3">
+        <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Label htmlFor="show-heading">Show heading</Label>
+            <Label htmlFor="show-heading">Section heading</Label>
             <p className="text-muted-foreground text-xs">
-              Display a label above your logos
+              Keep it short so the logos stay the focus.
             </p>
           </div>
           <Switch
@@ -87,152 +171,189 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             value={config.headingText}
           />
         </div>
-      </TabsContent>
+      </section>
 
-      <TabsContent className="mt-4 flex flex-col gap-4" value="style">
-        <div className="grid gap-2">
-          <div className="flex items-center gap-2">
-            <Label>Color mode</Label>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button size="icon-sm" variant="ghost">
-                    ?
-                  </Button>
-                }
-              />
-              <TooltipContent>
-                Mono and muted modes work best with transparent logos. Full
-                color shows original brand marks.
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <Select
-            onValueChange={(value) =>
-              onUpdate("colorMode", value as PresswallConfig["colorMode"])
-            }
-            value={config.colorMode}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="mono">Black &amp; white</SelectItem>
-              <SelectItem value="muted">Muted grayscale</SelectItem>
-              <SelectItem value="color">Full color</SelectItem>
-            </SelectContent>
-          </Select>
+      <section className="grid gap-3">
+        <div>
+          <h2 className="font-medium text-sm">Layout</h2>
+          <p className="text-muted-foreground text-xs">
+            Pick the shape that fits where this section will live.
+          </p>
         </div>
 
-        {config.colorMode === "muted" ? (
+        <div className="grid gap-2 md:grid-cols-3">
+          {LAYOUT_OPTIONS.map((option) => {
+            const OptionIcon = option.icon;
+            const isActive = config.layout === option.value;
+
+            return (
+              <button
+                className={cn(
+                  "flex min-h-24 flex-col items-start justify-between rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+                  isActive && "border-primary bg-muted"
+                )}
+                key={option.value}
+                onClick={() => onUpdate("layout", option.value)}
+                type="button"
+              >
+                <span className="flex w-full items-center justify-between gap-2">
+                  <span className="flex items-center gap-2 font-medium text-sm">
+                    <OptionIcon className="size-4" stroke={2} />
+                    {option.label}
+                  </span>
+                  {isActive ? (
+                    <span className="rounded-full bg-primary px-1.5 py-0.5 text-[0.625rem] text-primary-foreground">
+                      Active
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-3 text-muted-foreground text-xs">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem]">
           <div className="grid gap-2">
-            <Label>Muted opacity ({config.grayscaleOpacity}%)</Label>
+            <Label>Spacing ({config.gap}px)</Label>
             <Slider
-              max={100}
-              min={20}
+              max={64}
+              min={8}
+              onValueChange={(value) => onUpdate("gap", sliderValue(value))}
+              step={2}
+              value={[config.gap]}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Alignment</Label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {ALIGNMENT_OPTIONS.map((option) => {
+                const AlignIcon = option.icon;
+
+                return (
+                  <Tooltip key={option.value}>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          aria-label={`Align ${option.label.toLowerCase()}`}
+                          className={cn(
+                            config.alignment === option.value &&
+                              "border-ring bg-muted"
+                          )}
+                          onClick={() => onUpdate("alignment", option.value)}
+                          size="icon-lg"
+                          variant="outline"
+                        />
+                      }
+                    >
+                      <AlignIcon stroke={2} />
+                    </TooltipTrigger>
+                    <TooltipContent>{option.label}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <h2 className="font-medium text-sm">Logo treatment</h2>
+          <p className="text-muted-foreground text-xs">
+            Normalize mismatched publisher marks so the row feels intentional.
+          </p>
+        </div>
+
+        <div className="grid gap-2 md:grid-cols-3">
+          {COLOR_MODE_OPTIONS.map((option) => {
+            const OptionIcon = option.icon;
+            const isActive = config.colorMode === option.value;
+
+            return (
+              <button
+                className={cn(
+                  "flex min-h-20 flex-col items-start rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+                  isActive && "border-primary bg-muted"
+                )}
+                key={option.value}
+                onClick={() => onUpdate("colorMode", option.value)}
+                type="button"
+              >
+                <span className="flex items-center gap-2 font-medium text-sm">
+                  <OptionIcon className="size-4" stroke={2} />
+                  {option.label}
+                </span>
+                <span className="mt-2 text-muted-foreground text-xs">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-2">
+            <Label>Logo height ({config.logoHeight}px)</Label>
+            <Slider
+              max={80}
+              min={16}
               onValueChange={(value) =>
-                onUpdate("grayscaleOpacity", sliderValue(value))
+                onUpdate("logoHeight", sliderValue(value))
               }
-              step={5}
-              value={[config.grayscaleOpacity]}
+              step={2}
+              value={[config.logoHeight]}
             />
           </div>
-        ) : null}
 
-        <div className="grid gap-2">
-          <Label>Logo height ({config.logoHeight}px)</Label>
-          <Slider
-            max={80}
-            min={16}
-            onValueChange={(value) =>
-              onUpdate("logoHeight", sliderValue(value))
-            }
-            step={2}
-            value={[config.logoHeight]}
+          {config.colorMode === "muted" ? (
+            <div className="grid gap-2">
+              <Label>Muted opacity ({config.grayscaleOpacity}%)</Label>
+              <Slider
+                max={100}
+                min={20}
+                onValueChange={(value) =>
+                  onUpdate("grayscaleOpacity", sliderValue(value))
+                }
+                step={5}
+                value={[config.grayscaleOpacity]}
+              />
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <h2 className="font-medium text-sm">Section container</h2>
+          <p className="text-muted-foreground text-xs">
+            Match the surrounding Shopify section without wasting vertical
+            space.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <ColorInput
+            id="text-color"
+            label="Text color"
+            onChange={(value) => onUpdate("textColor", value)}
+            value={config.textColor}
+          />
+          <ColorInput
+            id="background-color"
+            label="Background"
+            onChange={(value) => onUpdate("backgroundColor", value)}
+            placeholder="transparent"
+            value={config.backgroundColor}
           />
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <div className="grid gap-2">
-            <Label htmlFor="text-color">Text color</Label>
-            <Input
-              id="text-color"
-              onChange={(event) => onUpdate("textColor", event.target.value)}
-              value={config.textColor}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="background-color">Background</Label>
-            <Input
-              id="background-color"
-              onChange={(event) =>
-                onUpdate("backgroundColor", event.target.value)
-              }
-              placeholder="transparent"
-              value={config.backgroundColor}
-            />
-          </div>
-        </div>
-      </TabsContent>
-
-      <TabsContent className="mt-4 flex flex-col gap-4" value="layout">
-        <div className="grid gap-2">
-          <Label>Layout type</Label>
-          <Select
-            onValueChange={(value) =>
-              onUpdate("layout", value as PresswallConfig["layout"])
-            }
-            value={config.layout}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bar">Horizontal bar</SelectItem>
-              <SelectItem value="grid">Grid</SelectItem>
-              <SelectItem value="marquee">Scrolling marquee</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2">
-          <Label>Alignment</Label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {ALIGNMENT_OPTIONS.map((option) => {
-              const AlignIcon = option.icon;
-
-              return (
-                <Button
-                  className={cn(
-                    "flex-col gap-0.5 py-2",
-                    config.alignment === option.value && "border-ring bg-muted"
-                  )}
-                  key={option.value}
-                  onClick={() => onUpdate("alignment", option.value)}
-                  variant="outline"
-                >
-                  <AlignIcon stroke={2} />
-                  <span className="text-[0.625rem]">{option.label}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          <Label>Gap ({config.gap}px)</Label>
-          <Slider
-            max={64}
-            min={8}
-            onValueChange={(value) => onUpdate("gap", sliderValue(value))}
-            step={2}
-            value={[config.gap]}
-          />
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label>Padding Y ({config.paddingY}px)</Label>
+            <Label>Top/bottom padding ({config.paddingY}px)</Label>
             <Slider
               max={80}
               min={0}
@@ -244,7 +365,7 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             />
           </div>
           <div className="grid gap-2">
-            <Label>Padding X ({config.paddingX}px)</Label>
+            <Label>Side padding ({config.paddingX}px)</Label>
             <Slider
               max={80}
               min={0}
@@ -255,19 +376,18 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
               value={[config.paddingX]}
             />
           </div>
-        </div>
-
-        <div className="grid gap-2">
-          <Label>Corner radius ({config.borderRadius}px)</Label>
-          <Slider
-            max={32}
-            min={0}
-            onValueChange={(value) =>
-              onUpdate("borderRadius", sliderValue(value))
-            }
-            step={2}
-            value={[config.borderRadius]}
-          />
+          <div className="grid gap-2">
+            <Label>Corner radius ({config.borderRadius}px)</Label>
+            <Slider
+              max={32}
+              min={0}
+              onValueChange={(value) =>
+                onUpdate("borderRadius", sliderValue(value))
+              }
+              step={2}
+              value={[config.borderRadius]}
+            />
+          </div>
         </div>
 
         {config.layout === "marquee" ? (
@@ -284,15 +404,7 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             />
           </div>
         ) : null}
-
-        <Alert>
-          <AlertTitle>Add to your theme</AlertTitle>
-          <AlertDescription>
-            After saving, open Online Store &rarr; Customize &rarr; Add block
-            &rarr; Apps &rarr; Presswall.
-          </AlertDescription>
-        </Alert>
-      </TabsContent>
-    </Tabs>
+      </section>
+    </div>
   );
 }

@@ -10,10 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { LOGO_GUIDANCE } from "@/lib/logo-guidance";
 
 interface CustomOutletFormProps {
+  compact?: boolean;
   onAdd: (name: string, svg: string) => void;
 }
 
-export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
+export function CustomOutletForm({
+  compact = false,
+  onAdd,
+}: CustomOutletFormProps) {
   const [customName, setCustomName] = useState("");
   const [customSvg, setCustomSvg] = useState("");
 
@@ -28,17 +32,19 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Alert>
-        <AlertTitle>{LOGO_GUIDANCE.title}</AlertTitle>
-        <AlertDescription>
-          <p className="mb-2">{LOGO_GUIDANCE.summary}</p>
-          <ul className="list-disc space-y-1 pl-4">
-            {LOGO_GUIDANCE.tips.map((tip) => (
-              <li key={tip}>{tip}</li>
-            ))}
-          </ul>
-        </AlertDescription>
-      </Alert>
+      {compact ? null : (
+        <Alert>
+          <AlertTitle>{LOGO_GUIDANCE.title}</AlertTitle>
+          <AlertDescription>
+            <p className="mb-2">{LOGO_GUIDANCE.summary}</p>
+            <ul className="list-disc space-y-1 pl-4">
+              {LOGO_GUIDANCE.tips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-3">
         <Label htmlFor="custom-name">Custom outlet name</Label>
@@ -63,9 +69,15 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
             value={customSvg}
           />
           <p className="text-muted-foreground text-xs">
-            Transparent PNGs can be embedded as a base64{" "}
-            <code className="rounded bg-muted px-1">&lt;image&gt;</code> inside
-            an SVG if needed.
+            {compact
+              ? "Paste a transparent SVG for best results."
+              : "Transparent PNGs can be embedded as a base64 "}
+            {compact ? null : (
+              <>
+                <code className="rounded bg-muted px-1">&lt;image&gt;</code>{" "}
+                inside an SVG if needed.
+              </>
+            )}
           </p>
         </div>
         <Button

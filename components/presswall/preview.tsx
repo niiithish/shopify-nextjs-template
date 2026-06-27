@@ -24,6 +24,7 @@ interface PreviewProps {
   catalog: PublisherCatalogItem[];
   config: PresswallConfig;
   selections: ShopPublisherSelection[];
+  showHeader?: boolean;
 }
 
 const alignmentClass = {
@@ -114,6 +115,7 @@ export function PresswallPreview({
   config,
   catalog,
   selections,
+  showHeader = true,
 }: PreviewProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const items = resolveStorefrontPublishers(config, catalog, selections);
@@ -150,33 +152,54 @@ export function PresswallPreview({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <IconEye className="text-muted-foreground" stroke={2} />
-          <div>
-            <p className="font-medium text-sm">Live preview</p>
-            <p className="text-muted-foreground text-xs">
-              How your presswall will look on the storefront
-            </p>
+      {showHeader ? (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <IconEye className="text-muted-foreground" stroke={2} />
+            <div>
+              <p className="font-medium text-sm">Live preview</p>
+              <p className="text-muted-foreground text-xs">
+                How your presswall will look on the storefront
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              onClick={() => setTheme("light")}
+              size="sm"
+              variant={theme === "light" ? "secondary" : "ghost"}
+            >
+              Light
+            </Button>
+            <Button
+              onClick={() => setTheme("dark")}
+              size="sm"
+              variant={theme === "dark" ? "secondary" : "ghost"}
+            >
+              Dark
+            </Button>
           </div>
         </div>
-        <div className="flex gap-1">
-          <Button
-            onClick={() => setTheme("light")}
-            size="sm"
-            variant={theme === "light" ? "secondary" : "ghost"}
-          >
-            Light
-          </Button>
-          <Button
-            onClick={() => setTheme("dark")}
-            size="sm"
-            variant={theme === "dark" ? "secondary" : "ghost"}
-          >
-            Dark
-          </Button>
+      ) : (
+        <div className="flex justify-end">
+          <div className="flex gap-1 rounded-md bg-muted p-0.5">
+            <Button
+              onClick={() => setTheme("light")}
+              size="sm"
+              variant={theme === "light" ? "secondary" : "ghost"}
+            >
+              Light
+            </Button>
+            <Button
+              onClick={() => setTheme("dark")}
+              size="sm"
+              variant={theme === "dark" ? "secondary" : "ghost"}
+            >
+              Dark
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         className={cn(

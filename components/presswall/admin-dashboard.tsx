@@ -21,7 +21,7 @@ export function AdminDashboard() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 p-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 p-4 sm:p-6">
         <ThemeActivationBanner />
 
         {editor.unavailableCount > 0 ? (
@@ -37,12 +37,9 @@ export function AdminDashboard() {
         ) : null}
 
         <PresswallOverview
-          catalogById={editor.catalogById}
-          config={editor.config}
-          isLoading={editor.isLoading}
+          editor={editor}
           onEditStyle={() => openWizard(1)}
           onOpenWizard={() => openWizard(0)}
-          selected={editor.selected}
         />
       </div>
 
@@ -54,11 +51,17 @@ export function AdminDashboard() {
       />
 
       <div className="sticky bottom-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 p-4">
-          <p className="text-muted-foreground text-sm">
-            {editor.selected.length} outlet
-            {editor.selected.length === 1 ? "" : "s"} selected
-          </p>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 p-4">
+          <div className="min-w-0">
+            <p className="font-medium text-sm">
+              {editor.selected.length} outlet
+              {editor.selected.length === 1 ? "" : "s"} ready for your section
+            </p>
+            <p className="truncate text-muted-foreground text-xs">
+              Save here, then add Presswall from Online Store &gt; Customize
+              &gt; Apps.
+            </p>
+          </div>
           <Button
             disabled={editor.isLoading || editor.isSaving}
             onClick={() => {

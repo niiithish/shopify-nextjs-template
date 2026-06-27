@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 interface PublisherLibraryProps {
   catalog: PublisherCatalogItem[];
   category: string;
+  idPrefix?: string;
   listClassName?: string;
   onCategoryChange: (value: string) => void;
   onSearchChange: (value: string) => void;
@@ -43,6 +44,7 @@ export function PublisherLibrary({
   onSearchChange,
   category,
   onCategoryChange,
+  idPrefix = "publisher",
   listClassName = "h-80",
 }: PublisherLibraryProps) {
   const filteredCatalog = useMemo(
@@ -106,18 +108,19 @@ export function PublisherLibrary({
           <div className="grid gap-0.5 p-1.5">
             {filteredCatalog.map((publisher) => {
               const checked = selectedIds.has(publisher.id);
+              const inputId = `${idPrefix}-${publisher.id}`;
               return (
                 <label
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-muted/50",
-                    checked && "border-border bg-muted/40"
+                    "flex cursor-pointer items-center gap-3 rounded-md border border-transparent px-3 py-2 transition-colors hover:bg-muted/60",
+                    checked && "border-primary/20 bg-muted"
                   )}
-                  htmlFor={`publisher-${publisher.id}`}
+                  htmlFor={inputId}
                   key={publisher.id}
                 >
                   <Checkbox
                     checked={checked}
-                    id={`publisher-${publisher.id}`}
+                    id={inputId}
                     onCheckedChange={() => onToggle(publisher)}
                   />
                   <div className="flex h-8 w-28 shrink-0 items-center justify-center rounded-md bg-muted/40 px-1">

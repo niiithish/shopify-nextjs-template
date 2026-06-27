@@ -146,6 +146,7 @@ export function SetupWizard({
                 <PublisherLibrary
                   catalog={editor.catalog}
                   category={editor.category}
+                  idPrefix="wizard-publisher"
                   listClassName="h-48"
                   onCategoryChange={editor.setCategory}
                   onSearchChange={editor.setSearch}

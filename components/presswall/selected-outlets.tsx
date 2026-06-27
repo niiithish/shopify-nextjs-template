@@ -14,9 +14,11 @@ import type {
   PublisherCatalogItem,
   SelectedPublisher,
 } from "@/lib/presswall-types";
+import { cn } from "@/lib/utils";
 
 interface SelectedOutletsProps {
   catalogById: Map<string, PublisherCatalogItem>;
+  className?: string;
   onMove: (index: number, direction: -1 | 1) => void;
   onRemove: (key: string) => void;
   selected: SelectedPublisher[];
@@ -25,6 +27,7 @@ interface SelectedOutletsProps {
 export function SelectedOutlets({
   selected,
   catalogById,
+  className,
   onMove,
   onRemove,
 }: SelectedOutletsProps) {
@@ -42,7 +45,7 @@ export function SelectedOutlets({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", className)}>
       {selected.map((item, index) => {
         const publisher = item.publisherId
           ? catalogById.get(item.publisherId)
@@ -74,6 +77,7 @@ export function SelectedOutlets({
 
             <div className="flex items-center gap-1">
               <Button
+                aria-label={`Move ${label} up`}
                 disabled={index === 0}
                 onClick={() => onMove(index, -1)}
                 size="icon-sm"
@@ -82,6 +86,7 @@ export function SelectedOutlets({
                 <IconArrowUp stroke={2} />
               </Button>
               <Button
+                aria-label={`Move ${label} down`}
                 disabled={index === selected.length - 1}
                 onClick={() => onMove(index, 1)}
                 size="icon-sm"
@@ -90,6 +95,7 @@ export function SelectedOutlets({
                 <IconArrowDown stroke={2} />
               </Button>
               <Button
+                aria-label={`Remove ${label}`}
                 onClick={() => onRemove(item.key)}
                 size="icon-sm"
                 variant="ghost"
