@@ -60,31 +60,36 @@ function parseJsonContent<T>(content: string): T | null {
   }
 }
 
-function isOurExtensionBlock(type: string | undefined): boolean {
+function isOurExtensionBlock(type: string | undefined, apiKey: string): boolean {
   if (!type) {
     return false;
   }
 
-  return type.includes(EXTENSION_UID);
+  return type.includes(apiKey) || type.includes(EXTENSION_UID);
 }
 
-function isEmbedBlock(type: string | undefined): boolean {
+function isEmbedBlock(type: string | undefined, apiKey: string): boolean {
   if (!type) {
     return false;
   }
 
   return (
-    isOurExtensionBlock(type) && type.includes(`/blocks/${EMBED_BLOCK_HANDLE}/`)
+    isOurExtensionBlock(type, apiKey) &&
+    type.includes(`/blocks/${EMBED_BLOCK_HANDLE}/`)
   );
 }
 
-function isSectionBlock(type: string | undefined): boolean {
+function isSectionBlock(type: string | undefined, apiKey: string): boolean {
   if (!type) {
     return false;
   }
 
+  if (isEmbedBlock(type, apiKey)) {
+    return false;
+  }
+
   return (
-    isOurExtensionBlock(type) &&
+    isOurExtensionBlock(type, apiKey) &&
     type.includes(`/blocks/${SECTION_BLOCK_HANDLE}/`)
   );
 }
@@ -116,7 +121,7 @@ function findBlocksInValue(
   return false;
 }
 
-function parseEmbedStatus(content: string): boolean {
+function parseEmbedStatus(content: string, apiKey: string): boolean {
   const settings = parseJsonContent<{
     current?: { blocks?: Record<string, ThemeBlockEntry> };
   }>(content);
@@ -127,17 +132,17 @@ function parseEmbedStatus(content: string): boolean {
   }
 
   return Object.values(blocks).some(
-    (block) => isEmbedBlock(block.type) && block.disabled !== true
+    (block) => isEmbedBlock(block.type, apiKey) && block.disabled !== true
   );
 }
 
-function parseSectionBlockStatus(content: string): boolean {
+function parseSectionBlockStatus(content: string, apiKey: string): boolean {
   const template = parseJsonContent<unknown>(content);
   if (!template) {
     return false;
   }
 
-  return findBlocksInValue(template, isSectionBlock);
+  return findBlocksInValue(template, (type) => isSectionBlock(type, apiKey));
 }
 
 export function buildThemeActivationUrls(
@@ -229,7 +234,7 @@ export async function getThemeActivationStatus(
     }
 
     if (file.filename === SETTINGS_DATA_FILE) {
-      appEmbedEnabled = parseEmbedStatus(content);
+      appEmbedEnabled = parseEmbedStatus(content, apiKey);
       continue;
     }
 
@@ -237,7 +242,7 @@ export async function getThemeActivationStatus(
       continue;
     }
 
-    appBlockEnabled = parseSectionBlockStatus(content);
+    appBlockEnabled = parseSectionBlockStatus(content, apiKey);
   }
 
   return {

@@ -6,7 +6,7 @@ import {
   IconAlignLeft,
   IconAlignRight,
 } from "@tabler/icons-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ColorField } from "@/components/presswall/color-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,29 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             value={config.headingText}
           />
         </div>
+
+        <div className="grid gap-3 rounded-lg border p-3">
+          <div>
+            <p className="font-medium text-sm">Colors</p>
+            <p className="text-muted-foreground text-xs">
+              Set how the heading and bar look on your storefront. Use
+              &ldquo;None&rdquo; for a transparent background.
+            </p>
+          </div>
+          <ColorField
+            allowTransparent
+            id="background-color"
+            label="Background"
+            onChange={(value) => onUpdate("backgroundColor", value)}
+            value={config.backgroundColor}
+          />
+          <ColorField
+            id="text-color"
+            label="Text color"
+            onChange={(value) => onUpdate("textColor", value)}
+            value={config.textColor}
+          />
+        </div>
       </TabsContent>
 
       <TabsContent className="mt-4 flex flex-col gap-4" value="style">
@@ -151,28 +174,6 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             value={[config.logoHeight]}
           />
         </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="text-color">Text color</Label>
-            <Input
-              id="text-color"
-              onChange={(event) => onUpdate("textColor", event.target.value)}
-              value={config.textColor}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="background-color">Background</Label>
-            <Input
-              id="background-color"
-              onChange={(event) =>
-                onUpdate("backgroundColor", event.target.value)
-              }
-              placeholder="transparent"
-              value={config.backgroundColor}
-            />
-          </div>
-        </div>
       </TabsContent>
 
       <TabsContent className="mt-4 flex flex-col gap-4" value="layout">
@@ -200,20 +201,26 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
           <div className="grid grid-cols-3 gap-1.5">
             {ALIGNMENT_OPTIONS.map((option) => {
               const AlignIcon = option.icon;
+              const isSelected = config.alignment === option.value;
 
               return (
-                <Button
+                <button
+                  aria-pressed={isSelected}
                   className={cn(
-                    "flex-col gap-0.5 py-2",
-                    config.alignment === option.value && "border-ring bg-muted"
+                    "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2.5 text-center transition-colors",
+                    isSelected
+                      ? "border-ring bg-muted text-foreground"
+                      : "border-border bg-background text-foreground hover:bg-muted/50"
                   )}
                   key={option.value}
                   onClick={() => onUpdate("alignment", option.value)}
-                  variant="outline"
+                  type="button"
                 >
-                  <AlignIcon stroke={2} />
-                  <span className="text-[0.625rem]">{option.label}</span>
-                </Button>
+                  <AlignIcon className="size-3.5 shrink-0" stroke={2} />
+                  <span className="w-full truncate text-[0.625rem] leading-none">
+                    {option.label}
+                  </span>
+                </button>
               );
             })}
           </div>
@@ -284,14 +291,6 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             />
           </div>
         ) : null}
-
-        <Alert>
-          <AlertTitle>Add to your theme</AlertTitle>
-          <AlertDescription>
-            After saving, open Online Store &rarr; Customize &rarr; Add block
-            &rarr; Apps &rarr; Presswall.
-          </AlertDescription>
-        </Alert>
       </TabsContent>
     </Tabs>
   );

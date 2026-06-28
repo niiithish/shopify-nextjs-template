@@ -10,10 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { LOGO_GUIDANCE } from "@/lib/logo-guidance";
 
 interface CustomOutletFormProps {
+  compact?: boolean;
   onAdd: (name: string, svg: string) => void;
 }
 
-export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
+export function CustomOutletForm({
+  onAdd,
+  compact = false,
+}: CustomOutletFormProps) {
   const [customName, setCustomName] = useState("");
   const [customSvg, setCustomSvg] = useState("");
 
@@ -25,6 +29,47 @@ export function CustomOutletForm({ onAdd }: CustomOutletFormProps) {
     setCustomName("");
     setCustomSvg("");
   };
+
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {LOGO_GUIDANCE.summary} Use transparent PNG or SVG assets.
+        </p>
+
+        <div className="grid gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="custom-name">Outlet name</Label>
+            <Input
+              id="custom-name"
+              onChange={(event) => setCustomName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  handleAdd();
+                }
+              }}
+              placeholder="Podcast, local news, blog..."
+              value={customName}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="custom-svg">Logo SVG</Label>
+            <Textarea
+              id="custom-svg"
+              onChange={(event) => setCustomSvg(event.target.value)}
+              placeholder="<svg ...>"
+              rows={3}
+              value={customSvg}
+            />
+          </div>
+          <Button disabled={!customName.trim()} onClick={handleAdd} size="sm">
+            <IconPlus stroke={2} />
+            Add outlet
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

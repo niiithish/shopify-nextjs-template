@@ -11,10 +11,12 @@ const DISMISS_KEY = "presswall-theme-activation-dismissed";
 
 interface ThemeActivationBannerProps {
   className?: string;
+  variant?: "default" | "compact";
 }
 
 export function ThemeActivationBanner({
   className,
+  variant = "default",
 }: ThemeActivationBannerProps) {
   const [status, setStatus] = useState<ThemeActivationStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +51,22 @@ export function ThemeActivationBanner({
     loadStatus().catch(() => undefined);
   }, [loadStatus]);
 
+  useEffect(() => {
+    const refreshStatus = () => {
+      if (document.visibilityState === "visible") {
+        loadStatus().catch(() => undefined);
+      }
+    };
+
+    document.addEventListener("visibilitychange", refreshStatus);
+    window.addEventListener("focus", refreshStatus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", refreshStatus);
+      window.removeEventListener("focus", refreshStatus);
+    };
+  }, [loadStatus]);
+
   const dismiss = () => {
     sessionStorage.setItem(DISMISS_KEY, "1");
     setIsDismissed(true);
@@ -56,6 +74,47 @@ export function ThemeActivationBanner({
 
   if (isLoading || isDismissed || !status || status.isActive) {
     return null;
+  }
+
+  if (variant === "compact") {
+    return (
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-between gap-3 border-amber-200/80 border-b bg-amber-50 px-4 py-2 text-amber-950",
+          className
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <IconAlertTriangle className="size-4 shrink-0" stroke={2} />
+          <p className="truncate text-xs sm:text-sm">
+            Enable the Presswall app embed to show logos on your storefront.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            onClick={() => {
+              window.open(
+                status.activateEmbedUrl,
+                "_blank",
+                "noopener,noreferrer"
+              );
+            }}
+            size="sm"
+            variant="outline"
+          >
+            Activate
+          </Button>
+          <button
+            aria-label="Dismiss activation reminder"
+            className="rounded-md p-1 text-amber-950/70 transition-colors hover:bg-amber-100 hover:text-amber-950"
+            onClick={dismiss}
+            type="button"
+          >
+            <IconX className="size-4" stroke={2} />
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,7 +150,11 @@ export function ThemeActivationBanner({
 
         <Button
           onClick={() => {
-            window.open(status.activateEmbedUrl, "_top");
+            window.open(
+              status.activateEmbedUrl,
+              "_blank",
+              "noopener,noreferrer"
+            );
           }}
         >
           Activate now

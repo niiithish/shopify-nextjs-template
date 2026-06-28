@@ -69,9 +69,15 @@ export function PublisherLibrary({
             stroke={2}
           />
           <Input
+            autoComplete="off"
             className="pl-8"
+            data-1p-ignore
+            data-form-type="other"
+            data-lpignore="true"
+            name="presswall-outlet-search"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search outlets..."
+            type="search"
             value={search}
           />
         </div>
@@ -92,7 +98,12 @@ export function PublisherLibrary({
         </Select>
       </div>
 
-      <div className={cn("overflow-y-auto rounded-lg border", listClassName)}>
+      <div
+        className={cn(
+          "min-h-0 overflow-y-auto rounded-lg border",
+          listClassName
+        )}
+      >
         {filteredCatalog.length === 0 ? (
           <Empty className="border-0">
             <EmptyHeader>

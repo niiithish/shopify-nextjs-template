@@ -60,6 +60,30 @@
   animation: presswall-scroll linear infinite;
 }
 
+.presswall-canvas-bg {
+  background-color: oklch(0.97 0 0);
+  background-image:
+    linear-gradient(45deg, oklch(0.93 0 0) 25%, transparent 25%),
+    linear-gradient(-45deg, oklch(0.93 0 0) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, oklch(0.93 0 0) 75%),
+    linear-gradient(-45deg, transparent 75%, oklch(0.93 0 0) 75%);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}
+
+.presswall-canvas-bg-dark {
+  background-color: oklch(0.18 0 0);
+  background-image:
+    linear-gradient(45deg, oklch(0.22 0 0) 25%, transparent 25%),
+    linear-gradient(-45deg, oklch(0.22 0 0) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, oklch(0.22 0 0) 75%),
+    linear-gradient(-45deg, transparent 75%, oklch(0.22 0 0) 75%);
+}
+
 .presswall-svg-logo > svg {
   display: block;
   width: auto;

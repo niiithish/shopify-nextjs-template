@@ -11,6 +11,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { getLogoImageStyle } from "@/lib/presswall-logo-style";
+import {
+  getPreviewColors,
+  shouldInvertLogosForPreview,
+} from "@/lib/presswall-preview-colors";
 import type {
   PresswallConfig,
   PublisherCatalogItem,
@@ -23,7 +27,9 @@ import { cn } from "@/lib/utils";
 interface PreviewProps {
   catalog: PublisherCatalogItem[];
   config: PresswallConfig;
+  isLoading?: boolean;
   selections: ShopPublisherSelection[];
+  variant?: "default" | "canvas";
 }
 
 const alignmentClass = {
@@ -31,13 +37,6 @@ const alignmentClass = {
   center: "justify-center",
   right: "justify-end",
 } as const;
-
-function getContainerBg(config: PresswallConfig, isDark: boolean): string {
-  if (config.backgroundColor === "transparent") {
-    return isDark ? "#111111" : "#ffffff";
-  }
-  return config.backgroundColor;
-}
 
 function LayoutContent({
   config,
@@ -114,22 +113,35 @@ export function PresswallPreview({
   config,
   catalog,
   selections,
+  variant = "default",
+  isLoading = false,
 }: PreviewProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const items = resolveStorefrontPublishers(config, catalog, selections);
   const isDark = theme === "dark";
+  const previewColors = getPreviewColors(config, isDark);
+  const invertLogos = shouldInvertLogosForPreview(config, isDark);
   const logoStyle = getLogoImageStyle(config);
+  const isCanvas = variant === "canvas";
 
   const containerStyle = {
-    backgroundColor: getContainerBg(config, isDark),
-    color: config.textColor,
+    backgroundColor: previewColors.backgroundColor,
+    color: previewColors.textColor,
     borderRadius: `${config.borderRadius}px`,
     padding: `${config.paddingY}px ${config.paddingX}px`,
   } satisfies React.CSSProperties;
 
   const renderLogo = (item: StorefrontPublisher) => {
+    const logoFilters = [
+      logoStyle?.filter,
+      invertLogos ? "invert(1)" : undefined,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     const logoContainerStyle = {
       ...logoStyle,
+      ...(logoFilters ? { filter: logoFilters } : {}),
       "--logo-height": `${config.logoHeight}px`,
       height: `${config.logoHeight}px`,
       maxWidth: "140px",
@@ -148,6 +160,68 @@ export function PresswallPreview({
     );
   };
 
+  const themeToggle = (
+    <div className="flex gap-1 rounded-lg border bg-background/90 p-0.5 shadow-sm backdrop-blur">
+      <Button
+        onClick={() => setTheme("light")}
+        size="sm"
+        variant={theme === "light" ? "secondary" : "ghost"}
+      >
+        Light
+      </Button>
+      <Button
+        onClick={() => setTheme("dark")}
+        size="sm"
+        variant={theme === "dark" ? "secondary" : "ghost"}
+      >
+        Dark
+      </Button>
+    </div>
+  );
+
+  const previewBody = (
+    <div
+      className={cn(
+        "w-full rounded-xl border shadow-sm",
+        isDark ? "border-white/10" : "border-black/10",
+        isCanvas ? "max-w-3xl" : "min-h-32"
+      )}
+      style={containerStyle}
+    >
+      {config.showHeading && config.headingText ? (
+        <p
+          className="mb-4 font-medium text-[11px] uppercase tracking-[0.28em]"
+          style={{ color: previewColors.textColor }}
+        >
+          {config.headingText}
+        </p>
+      ) : null}
+
+      <LayoutContent config={config} items={items} renderLogo={renderLogo} />
+    </div>
+  );
+
+  if (isCanvas) {
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="absolute top-3 right-3 z-10">{themeToggle}</div>
+
+        <div
+          className={cn(
+            "presswall-canvas-bg flex min-h-0 flex-1 items-center justify-center overflow-auto p-6",
+            isDark && "presswall-canvas-bg-dark"
+          )}
+        >
+          {isLoading ? (
+            <div className="h-32 w-full max-w-3xl animate-pulse rounded-xl border bg-background/60" />
+          ) : (
+            previewBody
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
@@ -160,42 +234,10 @@ export function PresswallPreview({
             </p>
           </div>
         </div>
-        <div className="flex gap-1">
-          <Button
-            onClick={() => setTheme("light")}
-            size="sm"
-            variant={theme === "light" ? "secondary" : "ghost"}
-          >
-            Light
-          </Button>
-          <Button
-            onClick={() => setTheme("dark")}
-            size="sm"
-            variant={theme === "dark" ? "secondary" : "ghost"}
-          >
-            Dark
-          </Button>
-        </div>
+        {themeToggle}
       </div>
 
-      <div
-        className={cn(
-          "min-h-32 rounded-lg border",
-          isDark ? "border-white/10" : "border-black/10"
-        )}
-        style={containerStyle}
-      >
-        {config.showHeading && config.headingText ? (
-          <p
-            className="mb-4 font-medium text-[11px] uppercase tracking-[0.28em]"
-            style={{ color: config.textColor }}
-          >
-            {config.headingText}
-          </p>
-        ) : null}
-
-        <LayoutContent config={config} items={items} renderLogo={renderLogo} />
-      </div>
+      {previewBody}
     </div>
   );
 }
