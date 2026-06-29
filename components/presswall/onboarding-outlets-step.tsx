@@ -1,12 +1,10 @@
 "use client";
 
-import { IconPhotoUp, IconX } from "@tabler/icons-react";
+import { IconPhotoUp, IconSearch, IconX } from "@tabler/icons-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { CustomOutletForm } from "@/components/presswall/custom-outlet-form";
 import { OnboardingActions } from "@/components/presswall/onboarding-actions";
-import { PublisherLibrary } from "@/components/presswall/publisher-library";
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -14,9 +12,22 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PresswallEditor } from "@/hooks/use-presswall-editor";
-import type { SelectedPublisher } from "@/lib/presswall-types";
+import type {
+  PublisherCatalogItem,
+  SelectedPublisher,
+} from "@/lib/presswall-types";
+import { PUBLISHER_CATEGORIES } from "@/lib/publishers-seed";
+import { cn } from "@/lib/utils";
 
 interface OnboardingOutletsStepProps {
   dots: ReactNode;
@@ -24,7 +35,101 @@ interface OnboardingOutletsStepProps {
   onNext: () => void;
 }
 
-function UploadedRow({
+function PositionBadge({ position }: { position: number }) {
+  return (
+    <span className="absolute -top-1.5 -right-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-foreground bg-foreground px-1 font-semibold text-[0.625rem] text-background tabular-nums shadow-sm">
+      {position}
+    </span>
+  );
+}
+
+function LibraryFilters({
+  category,
+  onCategoryChange,
+  onSearchChange,
+  search,
+}: {
+  category: string;
+  onCategoryChange: (value: string) => void;
+  onSearchChange: (value: string) => void;
+  search: string;
+}) {
+  return (
+    <div className="flex shrink-0 gap-2">
+      <div className="relative flex-1">
+        <IconSearch
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          stroke={2}
+        />
+        <Input
+          autoComplete="off"
+          className="h-9 pl-9"
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search outlets..."
+          type="search"
+          value={search}
+        />
+      </div>
+      <Select
+        onValueChange={(value) => value && onCategoryChange(value)}
+        value={category}
+      >
+        <SelectTrigger className="h-9 w-36">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+        <SelectContent>
+          {PUBLISHER_CATEGORIES.map((item) => (
+            <SelectItem key={item} value={item}>
+              {item}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function OutletTile({
+  name,
+  onToggle,
+  position,
+  publisherId,
+}: {
+  name: string;
+  onToggle: () => void;
+  position: number | null;
+  publisherId: string;
+}) {
+  const selected = position !== null;
+
+  return (
+    <button
+      aria-label={name}
+      aria-pressed={selected}
+      className={cn(
+        "relative flex flex-col items-center justify-center gap-1 rounded-lg border px-1.5 py-2 transition-all",
+        selected
+          ? "border-foreground/50 bg-muted/60 ring-1 ring-foreground/30"
+          : "hover:border-foreground/20 hover:bg-muted/40"
+      )}
+      onClick={onToggle}
+      title={name}
+      type="button"
+    >
+      <PublisherLogo
+        className="[--logo-height:1.25rem]"
+        name={name}
+        publisherId={publisherId}
+      />
+      <span className="w-full truncate text-center text-[0.625rem] text-muted-foreground leading-none">
+        {name}
+      </span>
+      {selected ? <PositionBadge position={position} /> : null}
+    </button>
+  );
+}
+
+function UploadedTile({
   item,
   onRemove,
   position,
@@ -36,30 +141,81 @@ function UploadedRow({
   const name = item.customName ?? "Custom outlet";
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
-      <div className="flex h-8 w-28 shrink-0 items-center justify-center rounded-md bg-background/60 px-1">
-        <PublisherLogo
-          className="[--logo-height:1.75rem]"
-          customLogoSvg={item.customLogoSvg}
-          name={name}
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-sm">{name}</p>
-        <p className="text-muted-foreground text-xs">Custom upload</p>
-      </div>
-      <Badge className="tabular-nums" variant="secondary">
-        #{position}
-      </Badge>
+    <div className="group relative flex flex-col items-center justify-center gap-1 rounded-lg border border-foreground/50 bg-muted/60 px-1.5 py-2 ring-1 ring-foreground/30">
+      <PublisherLogo
+        className="[--logo-height:1.25rem]"
+        customLogoSvg={item.customLogoSvg}
+        name={name}
+      />
+      <span className="w-full truncate text-center text-[0.625rem] text-muted-foreground leading-none">
+        {name}
+      </span>
+      <PositionBadge position={position} />
       <Button
         aria-label={`Remove ${name}`}
-        className="shrink-0"
+        className="absolute top-0.5 right-0.5 size-5 opacity-0 transition-opacity group-hover:opacity-100"
         onClick={() => onRemove(item.key)}
         size="icon-sm"
-        variant="ghost"
+        variant="secondary"
       >
         <IconX stroke={2} />
       </Button>
+    </div>
+  );
+}
+
+function OutletGrid({
+  catalog,
+  category,
+  onToggle,
+  search,
+  selectionPositionByKey,
+}: {
+  catalog: PublisherCatalogItem[];
+  category: string;
+  onToggle: (publisher: PublisherCatalogItem) => void;
+  search: string;
+  selectionPositionByKey: Map<string, number>;
+}) {
+  const filteredCatalog = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return catalog.filter((publisher) => {
+      const matchesCategory =
+        category === "All" || publisher.category === category;
+      const matchesSearch =
+        query.length === 0 ||
+        publisher.name.toLowerCase().includes(query) ||
+        publisher.category.toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+  }, [catalog, search, category]);
+
+  if (filteredCatalog.length === 0) {
+    return (
+      <Empty className="flex-1 border">
+        <EmptyHeader>
+          <EmptyTitle>No matches</EmptyTitle>
+          <EmptyDescription>
+            Try a different search or category.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border p-2">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {filteredCatalog.map((publisher) => (
+          <OutletTile
+            key={publisher.id}
+            name={publisher.name}
+            onToggle={() => onToggle(publisher)}
+            position={selectionPositionByKey.get(publisher.id) ?? null}
+            publisherId={publisher.id}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -131,19 +287,21 @@ export function OnboardingOutletsStep({
             </TabsList>
 
             <TabsContent
-              className="mt-0 flex min-h-0 flex-1 flex-col outline-none"
+              className="mt-0 flex min-h-0 flex-1 flex-col gap-3 outline-none"
               value="bundled"
             >
-              <PublisherLibrary
-                catalog={editor.catalog}
+              <LibraryFilters
                 category={category}
-                className="min-h-0 flex-1"
-                listClassName="flex-1"
                 onCategoryChange={setCategory}
                 onSearchChange={setSearch}
+                search={search}
+              />
+              <OutletGrid
+                catalog={editor.catalog}
+                category={category}
                 onToggle={editor.togglePublisher}
                 search={search}
-                selectedIds={editor.selectedIds}
+                selectionPositionByKey={selectionPositionByKey}
               />
             </TabsContent>
 
@@ -161,15 +319,17 @@ export function OnboardingOutletsStep({
                   </EmptyHeader>
                 </Empty>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1.5">
-                  {uploadedLogos.map((item) => (
-                    <UploadedRow
-                      item={item}
-                      key={item.key}
-                      onRemove={editor.removePublisher}
-                      position={selectionPositionByKey.get(item.key) ?? 1}
-                    />
-                  ))}
+                <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border p-2">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {uploadedLogos.map((item) => (
+                      <UploadedTile
+                        item={item}
+                        key={item.key}
+                        onRemove={editor.removePublisher}
+                        position={selectionPositionByKey.get(item.key) ?? 1}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </TabsContent>
