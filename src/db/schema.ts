@@ -36,11 +36,14 @@ export const shopConfigs = sqliteTable("shop_configs", {
   showHeading: integer("show_heading", { mode: "boolean" })
     .notNull()
     .default(true),
+  headingFontSize: integer("heading_font_size").notNull().default(12),
+  headingSpacing: integer("heading_spacing").notNull().default(20),
   colorMode: text("color_mode").notNull().default("mono"),
   layout: text("layout").notNull().default("bar"),
   logoHeight: integer("logo_height").notNull().default(32),
-  logosPerRow: integer("logos_per_row").notNull().default(4),
-  gap: integer("gap").notNull().default(24),
+  logosPerRowDesktop: integer("logos_per_row").notNull().default(4),
+  logosPerRowMobile: integer("logos_per_row_mobile").notNull().default(2),
+  gap: integer("gap").notNull().default(36),
   alignment: text("alignment").notNull().default("center"),
   backgroundColor: text("background_color").notNull().default("transparent"),
   textColor: text("text_color").notNull().default("#111111"),

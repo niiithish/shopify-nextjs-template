@@ -1,5 +1,6 @@
 import { DEFAULT_PRESSWALL_CONFIG } from "@/lib/presswall-defaults";
 import { isDarkBackgroundColor } from "@/lib/presswall-logo-contrast";
+import { withDerivedSpacing } from "@/lib/presswall-spacing";
 import type { PresswallConfig } from "@/lib/presswall-types";
 
 export type PresswallTemplateId =
@@ -34,7 +35,7 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 16,
       paddingX: 16,
       logoHeight: 32,
-      gap: 24,
+      headingFontSize: 12,
     },
   },
   {
@@ -53,7 +54,7 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 20,
       paddingX: 24,
       logoHeight: 32,
-      gap: 24,
+      headingFontSize: 12,
     },
   },
   {
@@ -72,7 +73,7 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 12,
       paddingX: 0,
       logoHeight: 28,
-      gap: 20,
+      headingFontSize: 12,
       grayscaleOpacity: 60,
     },
   },
@@ -91,7 +92,6 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 16,
       paddingX: 16,
       logoHeight: 28,
-      gap: 32,
       marqueeSpeed: 30,
     },
   },
@@ -111,8 +111,9 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 20,
       paddingX: 16,
       logoHeight: 32,
-      logosPerRow: 3,
-      gap: 20,
+      logosPerRowDesktop: 3,
+      logosPerRowMobile: 2,
+      headingFontSize: 12,
       grayscaleOpacity: 70,
     },
   },
@@ -132,7 +133,7 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       paddingY: 24,
       paddingX: 24,
       logoHeight: 30,
-      gap: 24,
+      headingFontSize: 12,
       grayscaleOpacity: 65,
     },
   },
@@ -169,10 +170,10 @@ export function applyPresswallTemplate(
   templateId: PresswallTemplateId
 ): PresswallConfig {
   const template = getPresswallTemplate(templateId);
-  return {
+  return withDerivedSpacing({
     ...DEFAULT_PRESSWALL_CONFIG,
     ...template.config,
-  };
+  });
 }
 
 const PRESSWALL_CONFIG_KEYS = Object.keys(

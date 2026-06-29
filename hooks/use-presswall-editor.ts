@@ -9,6 +9,7 @@ import {
   countUnavailableSelections,
   selectedFromApi,
 } from "@/lib/presswall-selections";
+import { applyDerivedSpacingPatch } from "@/lib/presswall-spacing";
 import {
   applyPresswallTemplate,
   findMatchingPresswallTemplateId,
@@ -31,9 +32,11 @@ export interface PresswallEditor {
   config: PresswallConfig;
   isLoading: boolean;
   isSaving: boolean;
+  loadError: boolean;
   matchedTemplateId: PresswallTemplateId | null;
   movePublisher: (index: number, direction: -1 | 1) => void;
   needsOnboarding: boolean;
+  reload: () => Promise<void>;
   removePublisher: (key: string) => void;
   save: () => Promise<void>;
   search: string;
@@ -61,7 +64,8 @@ export function usePresswallEditor(): PresswallEditor {
   const [category, setCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(true);
 
   const matchedTemplateId = useMemo(
     () => findMatchingPresswallTemplateId(config),
@@ -70,6 +74,7 @@ export function usePresswallEditor(): PresswallEditor {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(false);
 
     try {
       const [publishersRes, presswallRes] = await Promise.all([
@@ -78,6 +83,7 @@ export function usePresswallEditor(): PresswallEditor {
       ]);
 
       if (!(publishersRes.ok && presswallRes.ok)) {
+        setLoadError(true);
         toast.error("Failed to load Presswall settings");
         return;
       }
@@ -90,6 +96,7 @@ export function usePresswallEditor(): PresswallEditor {
       setSelected(selectedFromApi(presswallData.selections));
       setNeedsOnboarding(Boolean(presswallData.needsOnboarding));
     } catch {
+      setLoadError(true);
       toast.error("Failed to load Presswall settings");
     } finally {
       setIsLoading(false);
@@ -215,7 +222,14 @@ export function usePresswallEditor(): PresswallEditor {
 
   const updateConfig = useCallback(
     <K extends keyof PresswallConfig>(key: K, value: PresswallConfig[K]) => {
-      setConfig((current) => ({ ...current, [key]: value }));
+      setConfig((current) => {
+        const next = { ...current, [key]: value };
+
+        return {
+          ...next,
+          ...applyDerivedSpacingPatch(next, key),
+        };
+      });
     },
     []
   );
@@ -228,7 +242,9 @@ export function usePresswallEditor(): PresswallEditor {
     config,
     isLoading,
     isSaving,
+    loadError,
     needsOnboarding,
+    reload: loadData,
     search,
     selected,
     selectedIds,

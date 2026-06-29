@@ -1,4 +1,4 @@
-import { AdminDashboardLoader } from "@/components/presswall/admin-dashboard-loader";
+import { AdminDashboard } from "@/components/presswall/admin-dashboard";
 import { BrandLogo } from "@/components/presswall/brand-logo";
 import {
   Empty,
@@ -53,5 +53,5 @@ export default async function Page({ searchParams }: PageProps) {
   await authenticatePage(searchParams);
   await ensurePublisherCatalogSeeded();
 
-  return <AdminDashboardLoader />;
+  return <AdminDashboard />;
 }

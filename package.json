@@ -45,6 +45,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:apply-pending": "bun --env-file=.env.local scripts/apply-pending-migrations.ts",
+    "db:reset-onboarding": "bun --env-file=.env.local scripts/reset-shop-onboarding.ts",
     "db:studio": "drizzle-kit studio"
   },
   "type": "module",

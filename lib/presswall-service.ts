@@ -54,10 +54,17 @@ function mapConfigRow(
   const parsed = presswallConfigSchema.safeParse({
     headingText: row.headingText,
     showHeading: row.showHeading,
+    headingFontSize:
+      row.headingFontSize ?? DEFAULT_PRESSWALL_CONFIG.headingFontSize,
+    headingSpacing:
+      row.headingSpacing ?? DEFAULT_PRESSWALL_CONFIG.headingSpacing,
     colorMode: row.colorMode,
     layout: row.layout,
     logoHeight: row.logoHeight,
-    logosPerRow: row.logosPerRow ?? DEFAULT_PRESSWALL_CONFIG.logosPerRow,
+    logosPerRowDesktop:
+      row.logosPerRowDesktop ?? DEFAULT_PRESSWALL_CONFIG.logosPerRowDesktop,
+    logosPerRowMobile:
+      row.logosPerRowMobile ?? DEFAULT_PRESSWALL_CONFIG.logosPerRowMobile,
     gap: row.gap,
     alignment: row.alignment,
     backgroundColor: row.backgroundColor,
@@ -77,10 +84,13 @@ function buildConfigRow(shop: string, config: PresswallConfig, now: string) {
     shop,
     headingText: config.headingText,
     showHeading: config.showHeading,
+    headingFontSize: config.headingFontSize,
+    headingSpacing: config.headingSpacing,
     colorMode: config.colorMode,
     layout: config.layout,
     logoHeight: config.logoHeight,
-    logosPerRow: config.logosPerRow,
+    logosPerRowDesktop: config.logosPerRowDesktop,
+    logosPerRowMobile: config.logosPerRowMobile,
     gap: config.gap,
     alignment: config.alignment,
     backgroundColor: config.backgroundColor,
@@ -140,16 +150,9 @@ export async function getShopConfig(shop: string): Promise<PresswallConfig> {
 }
 
 export async function needsOnboarding(shop: string): Promise<boolean> {
-  const [configRow, selections] = await Promise.all([
-    getShopConfigRow(shop),
-    getShopPublisherSelections(shop),
-  ]);
+  const configRow = await getShopConfigRow(shop);
 
-  if (configRow?.onboardingCompletedAt) {
-    return false;
-  }
-
-  return selections.length === 0;
+  return !configRow?.onboardingCompletedAt;
 }
 
 export async function getShopPublisherSelections(

@@ -10,7 +10,9 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { getHeadingStyle } from "@/lib/presswall-heading-style";
 import {
+  getLogosPerRow,
   getLogosRowGridClassName,
   getLogosRowGridStyle,
 } from "@/lib/presswall-layout-style";
@@ -89,7 +91,10 @@ function LayoutContent({
     return (
       <div
         className={getLogosRowGridClassName(config.alignment)}
-        style={getLogosRowGridStyle(config.logosPerRow, config.gap)}
+        style={getLogosRowGridStyle(
+          getLogosPerRow(config, "desktop"),
+          config.gap
+        )}
       >
         {items.map((item) => (
           <div
@@ -106,7 +111,10 @@ function LayoutContent({
   return (
     <div
       className={getLogosRowGridClassName(config.alignment)}
-      style={getLogosRowGridStyle(config.logosPerRow, config.gap)}
+      style={getLogosRowGridStyle(
+        getLogosPerRow(config, "desktop"),
+        config.gap
+      )}
     >
       {items.map((item) => (
         <div className="flex min-w-0 items-center justify-center" key={item.id}>
@@ -180,10 +188,13 @@ export function PresswallPreview({
       {config.showHeading && config.headingText ? (
         <p
           className={cn(
-            "mb-4 font-medium text-[11px] uppercase tracking-[0.28em]",
+            "m-0 font-medium uppercase tracking-[0.28em]",
             headingAlignmentClass[config.alignment]
           )}
-          style={{ color: previewColors.textColor }}
+          style={getHeadingStyle({
+            ...config,
+            textColor: previewColors.textColor,
+          })}
         >
           {config.headingText}
         </p>

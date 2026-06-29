@@ -13,10 +13,16 @@
   text-align: center;
 }
 
+.presswall-shell {
+  --presswall-gap: 36px;
+  --presswall-heading-size: 12px;
+  --presswall-heading-spacing: 20px;
+}
+
 .presswall-heading {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--presswall-heading-spacing);
   font-family: var(--font-heading-family, inherit);
-  font-size: 0.6875rem;
+  font-size: var(--presswall-heading-size);
   font-weight: inherit;
   text-transform: uppercase;
   letter-spacing: 0.28em;
@@ -37,8 +43,16 @@
 .presswall-bar,
 .presswall-grid {
   display: grid;
-  grid-template-columns: repeat(var(--logos-per-row, 4), auto);
+  grid-template-columns: repeat(var(--logos-per-row-mobile, 2), auto);
+  gap: var(--presswall-gap);
   align-items: center;
+}
+
+@media (min-width: 640px) {
+  .presswall-bar,
+  .presswall-grid {
+    grid-template-columns: repeat(var(--logos-per-row-desktop, 4), auto);
+  }
 }
 
 .presswall-bar.presswall-align-left,
@@ -99,6 +113,7 @@
 
 .presswall-marquee-track {
   display: flex;
+  gap: var(--presswall-gap);
   width: max-content;
   animation: presswall-scroll linear infinite;
 }

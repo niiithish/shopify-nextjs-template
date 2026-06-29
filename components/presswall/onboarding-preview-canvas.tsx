@@ -1,19 +1,8 @@
 "use client";
 
-import {
-  Background,
-  BackgroundVariant,
-  Controls,
-  type Node,
-  type NodeProps,
-  Panel,
-  ReactFlow,
-  ReactFlowProvider,
-  useNodesState,
-  useReactFlow,
-} from "@xyflow/react";
-import { memo, useEffect } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { OnboardingPreview } from "@/components/presswall/onboarding-preview";
+import { getPreviewViewportWidth } from "@/lib/presswall-preview-viewport";
 import type {
   PresswallConfig,
   PublisherCatalogItem,
@@ -21,61 +10,7 @@ import type {
 } from "@/lib/presswall-types";
 import { cn } from "@/lib/utils";
 
-import "@xyflow/react/dist/style.css";
-
-const PREVIEW_NODE_ID = "presswall-preview";
-
 type DeviceMode = "desktop" | "mobile";
-
-interface PresswallPreviewNodeData extends Record<string, unknown> {
-  catalog: PublisherCatalogItem[];
-  config: PresswallConfig;
-  deviceMode: DeviceMode;
-  previewTheme: "light" | "dark";
-  selections: ShopPublisherSelection[];
-}
-
-type PresswallPreviewNode = Node<PresswallPreviewNodeData, "presswallPreview">;
-
-const nodeTypes = {
-  presswallPreview: memo(function PresswallPreviewNode({
-    data,
-  }: NodeProps<PresswallPreviewNode>) {
-    const width = data.deviceMode === "mobile" ? 280 : 680;
-
-    return (
-      <div
-        className={cn(
-          "overflow-hidden rounded-xl bg-background shadow-sm ring-1 ring-border/60",
-          data.deviceMode === "mobile" && "rounded-[1.25rem]"
-        )}
-        style={{ width }}
-      >
-        <OnboardingPreview
-          catalog={data.catalog}
-          className="border-0 shadow-none"
-          config={data.config}
-          previewTheme={data.previewTheme}
-          scale="lg"
-          selections={data.selections}
-        />
-      </div>
-    );
-  }),
-};
-
-function createPreviewNode(
-  data: PresswallPreviewNodeData
-): PresswallPreviewNode {
-  return {
-    id: PREVIEW_NODE_ID,
-    type: "presswallPreview",
-    position: { x: 0, y: 0 },
-    data,
-    draggable: true,
-    selectable: true,
-  };
-}
 
 interface OnboardingPreviewCanvasProps {
   catalog: PublisherCatalogItem[];
@@ -85,78 +20,108 @@ interface OnboardingPreviewCanvasProps {
   selections: ShopPublisherSelection[];
 }
 
-function OnboardingPreviewCanvasInner({
+const CANVAS_HORIZONTAL_PADDING = 48;
+
+export function OnboardingPreviewCanvas({
   catalog,
   config,
   deviceMode,
   previewTheme,
   selections,
 }: OnboardingPreviewCanvasProps) {
-  const { fitView } = useReactFlow();
-  const [nodes, setNodes, onNodesChange] = useNodesState<PresswallPreviewNode>([
-    createPreviewNode({
-      catalog,
-      config,
-      deviceMode,
-      previewTheme,
-      selections,
-    }),
-  ]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
 
-  useEffect(() => {
-    setNodes((current) =>
-      current.map((node) =>
-        node.id === PREVIEW_NODE_ID
-          ? {
-              ...node,
-              data: { catalog, config, deviceMode, previewTheme, selections },
-            }
-          : node
-      )
-    );
-  }, [catalog, config, deviceMode, previewTheme, selections, setNodes]);
+  useLayoutEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return;
+    }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refit when preview frame width changes
-  useEffect(() => {
-    fitView({ padding: 0.28, duration: 250 });
-  }, [deviceMode, fitView]);
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const element = contentRef.current;
+    if (!element) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContentHeight(entry.contentRect.height);
+      }
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const viewportWidth = getPreviewViewportWidth(deviceMode);
+  const scale =
+    containerWidth > 0
+      ? Math.min(
+          1,
+          (containerWidth - CANVAS_HORIZONTAL_PADDING) / viewportWidth
+        )
+      : 1;
+  const scaledWidth = viewportWidth * scale;
+  const scaledHeight = contentHeight > 0 ? contentHeight * scale : undefined;
+  const isReady = containerWidth > 0 && contentHeight > 0;
 
   return (
-    <ReactFlow
-      className="bg-muted/35"
-      defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-      deleteKeyCode={null}
-      edges={[]}
-      elementsSelectable={false}
-      maxZoom={2}
-      minZoom={0.35}
-      nodes={nodes}
-      nodesConnectable={false}
-      nodesDraggable
-      nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
-      panOnDrag
-      proOptions={{ hideAttribution: true }}
-      zoomOnDoubleClick={false}
-      zoomOnPinch
-      zoomOnScroll
+    <div
+      className={cn(
+        "presswall-canvas-bg relative h-full w-full overflow-auto",
+        previewTheme === "dark" && "presswall-canvas-bg-dark"
+      )}
+      ref={containerRef}
     >
-      <Background gap={18} size={1} variant={BackgroundVariant.Dots} />
-      <Controls showInteractive={false} />
-      <Panel
-        className="rounded-md border bg-background/90 px-2.5 py-1 text-[0.625rem] text-muted-foreground shadow-sm backdrop-blur-sm"
-        position="top-left"
-      >
-        Drag to move · scroll to zoom
-      </Panel>
-    </ReactFlow>
-  );
-}
+      <div className="flex min-h-full items-center justify-center p-6">
+        <div
+          className={cn(!isReady && "opacity-0")}
+          style={{
+            height: scaledHeight,
+            width: scaledWidth,
+          }}
+        >
+          <div
+            ref={contentRef}
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+              width: viewportWidth,
+            }}
+          >
+            <OnboardingPreview
+              catalog={catalog}
+              className="border-black/10 shadow-sm"
+              config={config}
+              deviceMode={deviceMode}
+              previewTheme={previewTheme}
+              scale="lg"
+              selections={selections}
+            />
+          </div>
+        </div>
+      </div>
 
-export function OnboardingPreviewCanvas(props: OnboardingPreviewCanvasProps) {
-  return (
-    <ReactFlowProvider>
-      <OnboardingPreviewCanvasInner {...props} />
-    </ReactFlowProvider>
+      <p className="pointer-events-none absolute top-3 left-3 rounded-md border bg-background/90 px-2.5 py-1 text-[0.625rem] text-muted-foreground shadow-sm backdrop-blur-sm">
+        {deviceMode === "desktop" ? "Desktop" : "Mobile"} · {viewportWidth}px
+        wide
+        {scale < 1 ? ` · scaled ${Math.round(scale * 100)}%` : null}
+      </p>
+    </div>
   );
 }

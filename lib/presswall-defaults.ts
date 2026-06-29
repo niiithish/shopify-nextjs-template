@@ -1,13 +1,15 @@
+import { withDerivedSpacing } from "@/lib/presswall-spacing";
 import type { PresswallConfig } from "@/lib/presswall-types";
 
-export const DEFAULT_PRESSWALL_CONFIG: PresswallConfig = {
+const BASE_PRESSWALL_CONFIG = {
   headingText: "As seen on",
   showHeading: true,
+  headingFontSize: 12,
   colorMode: "mono",
   layout: "bar",
   logoHeight: 32,
-  logosPerRow: 4,
-  gap: 24,
+  logosPerRowDesktop: 4,
+  logosPerRowMobile: 2,
   alignment: "center",
   backgroundColor: "transparent",
   textColor: "#111111",
@@ -16,4 +18,8 @@ export const DEFAULT_PRESSWALL_CONFIG: PresswallConfig = {
   paddingX: 16,
   marqueeSpeed: 30,
   grayscaleOpacity: 70,
-};
+} satisfies Omit<PresswallConfig, "gap" | "headingSpacing">;
+
+export const DEFAULT_PRESSWALL_CONFIG: PresswallConfig = withDerivedSpacing(
+  BASE_PRESSWALL_CONFIG as PresswallConfig
+);

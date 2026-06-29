@@ -1,0 +1,69 @@
+import type { PresswallConfig } from "@/lib/presswall-types";
+
+const LOGO_GAP_PER_LOGO_HEIGHT = 1.125;
+const HEADING_SPACING_PER_FONT_SIZE = 5 / 3;
+
+const LAYOUT_GAP_MULTIPLIER: Record<PresswallConfig["layout"], number> = {
+  bar: 1,
+  grid: 0.778,
+  marquee: 1,
+};
+
+function roundToStep(value: number, step = 2): number {
+  return Math.round(value / step) * step;
+}
+
+function clampSpacing(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, roundToStep(value)));
+}
+
+export function deriveLogoGap(
+  logoHeight: number,
+  layout: PresswallConfig["layout"] = "bar"
+): number {
+  const raw =
+    logoHeight * LOGO_GAP_PER_LOGO_HEIGHT * LAYOUT_GAP_MULTIPLIER[layout];
+
+  return clampSpacing(raw, 8, 64);
+}
+
+export function deriveHeadingSpacing(headingFontSize: number): number {
+  const raw = headingFontSize * HEADING_SPACING_PER_FONT_SIZE;
+
+  return clampSpacing(raw, 8, 48);
+}
+
+export function withDerivedSpacing(config: PresswallConfig): PresswallConfig {
+  return {
+    ...config,
+    gap: deriveLogoGap(config.logoHeight, config.layout),
+    headingSpacing: deriveHeadingSpacing(config.headingFontSize),
+  };
+}
+
+export function applyDerivedSpacingPatch(
+  config: PresswallConfig,
+  key: keyof PresswallConfig
+): Partial<PresswallConfig> {
+  if (key === "logoHeight" || key === "layout") {
+    return { gap: deriveLogoGap(config.logoHeight, config.layout) };
+  }
+
+  if (key === "headingFontSize") {
+    return { headingSpacing: deriveHeadingSpacing(config.headingFontSize) };
+  }
+
+  return {};
+}
+
+export function scaleSpacingForPreview(
+  spacing: number,
+  configLogoHeight: number,
+  previewLogoHeight: number
+): number {
+  if (configLogoHeight <= 0) {
+    return spacing;
+  }
+
+  return roundToStep(spacing * (previewLogoHeight / configLogoHeight));
+}

@@ -7,6 +7,17 @@ const rowAlignmentClass = {
   right: "justify-end",
 } as const;
 
+export type PresswallViewport = "desktop" | "mobile";
+
+export function getLogosPerRow(
+  config: Pick<PresswallConfig, "logosPerRowDesktop" | "logosPerRowMobile">,
+  viewport: PresswallViewport = "desktop"
+): number {
+  return viewport === "mobile"
+    ? config.logosPerRowMobile
+    : config.logosPerRowDesktop;
+}
+
 export function getLogosRowGridStyle(
   logosPerRow: number,
   gap: number

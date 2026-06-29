@@ -1,0 +1,1 @@
+ALTER TABLE `shop_configs` ADD `logos_per_row_mobile` integer DEFAULT 2 NOT NULL;

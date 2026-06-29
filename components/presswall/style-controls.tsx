@@ -88,6 +88,36 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
           />
         </div>
 
+        {config.showHeading ? (
+          <>
+            <div className="grid gap-2">
+              <Label>Heading size ({config.headingFontSize}px)</Label>
+              <Slider
+                max={24}
+                min={10}
+                onValueChange={(value) =>
+                  onUpdate("headingFontSize", sliderValue(value))
+                }
+                step={1}
+                value={[config.headingFontSize]}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Space below heading ({config.headingSpacing}px)</Label>
+              <Slider
+                max={48}
+                min={8}
+                onValueChange={(value) =>
+                  onUpdate("headingSpacing", sliderValue(value))
+                }
+                step={2}
+                value={[config.headingSpacing]}
+              />
+            </div>
+          </>
+        ) : null}
+
         <div className="grid gap-3 rounded-lg border p-3">
           <div>
             <p className="font-medium text-sm">Colors</p>
@@ -197,18 +227,34 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
         </div>
 
         {config.layout === "bar" || config.layout === "grid" ? (
-          <div className="grid gap-2">
-            <Label>Logos per row ({config.logosPerRow})</Label>
-            <Slider
-              max={8}
-              min={2}
-              onValueChange={(value) =>
-                onUpdate("logosPerRow", sliderValue(value))
-              }
-              step={1}
-              value={[config.logosPerRow]}
-            />
-          </div>
+          <>
+            <div className="grid gap-2">
+              <Label>
+                Logos per row — desktop ({config.logosPerRowDesktop})
+              </Label>
+              <Slider
+                max={8}
+                min={2}
+                onValueChange={(value) =>
+                  onUpdate("logosPerRowDesktop", sliderValue(value))
+                }
+                step={1}
+                value={[config.logosPerRowDesktop]}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Logos per row — mobile ({config.logosPerRowMobile})</Label>
+              <Slider
+                max={4}
+                min={1}
+                onValueChange={(value) =>
+                  onUpdate("logosPerRowMobile", sliderValue(value))
+                }
+                step={1}
+                value={[config.logosPerRowMobile]}
+              />
+            </div>
+          </>
         ) : null}
 
         <div className="grid gap-2">

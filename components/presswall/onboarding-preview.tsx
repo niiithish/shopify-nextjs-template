@@ -1,15 +1,19 @@
 "use client";
 
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
+import { getHeadingStyle } from "@/lib/presswall-heading-style";
 import {
+  getLogosPerRow,
   getLogosRowGridClassName,
   getLogosRowGridStyle,
+  type PresswallViewport,
 } from "@/lib/presswall-layout-style";
 import {
   getLogoImageStyle,
   getLogoSlotStyle,
 } from "@/lib/presswall-logo-style";
 import { getPreviewColors } from "@/lib/presswall-preview-colors";
+import { scaleSpacingForPreview } from "@/lib/presswall-spacing";
 import type {
   PresswallConfig,
   PublisherCatalogItem,
@@ -23,6 +27,7 @@ interface OnboardingPreviewProps {
   catalog: PublisherCatalogItem[];
   className?: string;
   config: PresswallConfig;
+  deviceMode?: PresswallViewport;
   previewTheme?: "light" | "dark";
   scale?: "sm" | "md" | "lg";
   selections: ShopPublisherSelection[];
@@ -36,11 +41,15 @@ const headingAlignmentClass = {
 
 function PreviewLogos({
   config,
+  gap,
   items,
+  logosPerRow,
   renderLogo,
 }: {
   config: PresswallConfig;
+  gap: number;
   items: ReturnType<typeof resolveStorefrontPublishers>;
+  logosPerRow: number;
   renderLogo: (item: StorefrontPublisher) => React.ReactNode;
 }) {
   if (items.length === 0) {
@@ -57,7 +66,7 @@ function PreviewLogos({
         <div
           className="presswall-marquee flex w-max items-center"
           style={{
-            gap: `${Math.min(config.gap, 20)}px`,
+            gap: `${gap}px`,
             animationDuration: `${config.marqueeSpeed}s`,
           }}
         >
@@ -72,16 +81,15 @@ function PreviewLogos({
     );
   }
 
+  const rowItems = items.slice(0, logosPerRow * 2);
+
   if (config.layout === "grid") {
     return (
       <div
         className={getLogosRowGridClassName(config.alignment)}
-        style={getLogosRowGridStyle(
-          config.logosPerRow,
-          Math.min(config.gap, 16)
-        )}
+        style={getLogosRowGridStyle(logosPerRow, gap)}
       >
-        {items.slice(0, config.logosPerRow * 2).map((item) => (
+        {rowItems.map((item) => (
           <div
             className="flex min-w-0 items-center justify-center"
             key={item.id}
@@ -96,9 +104,9 @@ function PreviewLogos({
   return (
     <div
       className={getLogosRowGridClassName(config.alignment)}
-      style={getLogosRowGridStyle(config.logosPerRow, Math.min(config.gap, 20))}
+      style={getLogosRowGridStyle(logosPerRow, gap)}
     >
-      {items.slice(0, config.logosPerRow * 2).map((item) => (
+      {rowItems.map((item) => (
         <div className="flex min-w-0 items-center justify-center" key={item.id}>
           {renderLogo(item)}
         </div>
@@ -112,6 +120,7 @@ export function OnboardingPreview({
   config,
   selections,
   className,
+  deviceMode,
   scale = "md",
   previewTheme = "light",
 }: OnboardingPreviewProps) {
@@ -119,12 +128,25 @@ export function OnboardingPreview({
   const isDark = previewTheme === "dark";
   const previewColors = getPreviewColors(config, isDark);
   const logoStyle = getLogoImageStyle(config, { previewIsDark: isDark });
+  const isLivePreview = scale === "lg" && deviceMode !== undefined;
 
-  const logoHeight =
-    scale === "sm" ? Math.min(config.logoHeight, 20) : config.logoHeight;
+  const viewport = deviceMode ?? "desktop";
+  const logosPerRow = getLogosPerRow(config, viewport);
+  const logoHeight = isLivePreview
+    ? config.logoHeight
+    : Math.min(config.logoHeight, 20);
+  const gap = isLivePreview
+    ? config.gap
+    : scaleSpacingForPreview(config.gap, config.logoHeight, logoHeight);
+  const paddingY = isLivePreview
+    ? config.paddingY
+    : Math.min(config.paddingY, 12);
+  const paddingX = isLivePreview
+    ? config.paddingX
+    : Math.min(config.paddingX, 12);
 
   const renderLogo = (item: StorefrontPublisher) => {
-    const maxWidth = scale === "sm" ? 72 : 160;
+    const maxWidth = isLivePreview ? 200 : 72;
 
     return (
       <PublisherLogo
@@ -137,11 +159,6 @@ export function OnboardingPreview({
       />
     );
   };
-
-  const paddingY =
-    scale === "sm" ? Math.min(config.paddingY, 12) : config.paddingY;
-  const paddingX =
-    scale === "sm" ? Math.min(config.paddingX, 12) : config.paddingX;
 
   return (
     <div
@@ -156,17 +173,28 @@ export function OnboardingPreview({
       {config.showHeading && config.headingText ? (
         <p
           className={cn(
-            "font-medium uppercase tracking-[0.28em]",
-            headingAlignmentClass[config.alignment],
-            scale === "sm" ? "mb-2 text-[8px]" : "mb-3 text-[10px]"
+            "m-0 font-medium uppercase tracking-[0.28em]",
+            headingAlignmentClass[config.alignment]
           )}
-          style={{ color: previewColors.textColor }}
+          style={getHeadingStyle(
+            {
+              ...config,
+              textColor: previewColors.textColor,
+            },
+            { compact: !isLivePreview }
+          )}
         >
           {config.headingText}
         </p>
       ) : null}
 
-      <PreviewLogos config={config} items={items} renderLogo={renderLogo} />
+      <PreviewLogos
+        config={config}
+        gap={gap}
+        items={items}
+        logosPerRow={logosPerRow}
+        renderLogo={renderLogo}
+      />
     </div>
   );
 }

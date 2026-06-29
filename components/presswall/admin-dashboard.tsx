@@ -5,6 +5,13 @@ import { OnboardingFlow } from "@/components/presswall/onboarding-flow";
 import { OnboardingShellSkeleton } from "@/components/presswall/onboarding-shell-skeleton";
 import { ThemeActivationBanner } from "@/components/presswall/theme-activation-banner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { usePresswallEditor } from "@/hooks/use-presswall-editor";
 
 export function AdminDashboard() {
@@ -12,6 +19,31 @@ export function AdminDashboard() {
 
   if (editor.isLoading) {
     return <OnboardingShellSkeleton />;
+  }
+
+  if (editor.loadError) {
+    return (
+      <div className="flex h-svh items-center justify-center p-6">
+        <Empty className="max-w-md border">
+          <EmptyHeader>
+            <EmptyTitle>Could not load Presswall</EmptyTitle>
+            <EmptyDescription>
+              Settings failed to load. This can happen after a schema change —
+              retry after migrations are applied.
+            </EmptyDescription>
+          </EmptyHeader>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              editor.reload().catch(() => undefined);
+            }}
+            type="button"
+          >
+            Retry
+          </Button>
+        </Empty>
+      </div>
+    );
   }
 
   if (editor.needsOnboarding) {

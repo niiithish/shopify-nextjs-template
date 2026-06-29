@@ -50,8 +50,16 @@ const INLINE_RGB_COLOR_PATTERN =
     const borderRadius = sanitizeCssSize(config.borderRadius, 0);
     const paddingY = sanitizeCssSize(config.paddingY, 16);
     const paddingX = sanitizeCssSize(config.paddingX, 16);
-    const gap = sanitizeCssSize(config.gap, 24);
-    const logosPerRow = clampLogosPerRow(config.logosPerRow);
+    const gap = sanitizeCssSize(config.gap, 36);
+    const headingFontSize = sanitizeCssSize(config.headingFontSize, 12);
+    const headingSpacing = sanitizeCssSize(config.headingSpacing, 20);
+    const logosPerRowDesktop = clampInt(
+      config.logosPerRowDesktop ?? config.logosPerRow,
+      4,
+      2,
+      8
+    );
+    const logosPerRowMobile = clampInt(config.logosPerRowMobile, 2, 1, 4);
     const marqueeSpeed = sanitizeCssSize(config.marqueeSpeed, 30);
     const alignment = sanitizeAlignment(config.alignment);
 
@@ -60,6 +68,9 @@ const INLINE_RGB_COLOR_PATTERN =
       `color:${textColor}`,
       `border-radius:${borderRadius}px`,
       `padding:${paddingY}px ${paddingX}px`,
+      `--presswall-gap:${gap}px`,
+      `--presswall-heading-size:${headingFontSize}px`,
+      `--presswall-heading-spacing:${headingSpacing}px`,
     ].join(";");
 
     const heading =
@@ -73,11 +84,11 @@ const INLINE_RGB_COLOR_PATTERN =
       .join("");
 
     if (config.layout === "marquee") {
-      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-marquee-wrap"><div class="presswall-marquee-track presswall-align-${alignment}" style="gap:${gap}px;animation-duration:${marqueeSpeed}s">${logos}${logos}</div></div></div>`;
+      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-marquee-wrap"><div class="presswall-marquee-track presswall-align-${alignment}" style="animation-duration:${marqueeSpeed}s">${logos}${logos}</div></div></div>`;
     }
 
     if (config.layout === "grid") {
-      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-grid presswall-align-${alignment}" style="gap:${gap}px;--logos-per-row:${logosPerRow}">${config.publishers
+      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-grid presswall-align-${alignment}" style="--logos-per-row-desktop:${logosPerRowDesktop};--logos-per-row-mobile:${logosPerRowMobile}">${config.publishers
         .map(
           (publisher) =>
             `<div class="presswall-grid-item">${renderLogo(publisher, config, logoStyle)}</div>`
@@ -85,7 +96,7 @@ const INLINE_RGB_COLOR_PATTERN =
         .join("")}</div></div>`;
     }
 
-    return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-bar presswall-align-${alignment}" style="gap:${gap}px;--logos-per-row:${logosPerRow}">${logos}</div></div>`;
+    return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-bar presswall-align-${alignment}" style="--logos-per-row-desktop:${logosPerRowDesktop};--logos-per-row-mobile:${logosPerRowMobile}">${logos}</div></div>`;
   }
 
   function renderLogo(publisher, config, logoStyle) {
@@ -245,13 +256,13 @@ const INLINE_RGB_COLOR_PATTERN =
     return Math.max(0, Math.round(parsed));
   }
 
-  function clampLogosPerRow(value) {
+  function clampInt(value, fallback, min, max) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) {
-      return 4;
+      return fallback;
     }
 
-    return Math.min(8, Math.max(2, Math.round(parsed)));
+    return Math.min(max, Math.max(min, Math.round(parsed)));
   }
 
   function sanitizeUrl(url) {
