@@ -27,8 +27,8 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       backgroundColor: "transparent",
       textColor: "#111111",
       borderRadius: 0,
-      paddingY: 16,
-      paddingX: 16,
+      paddingY: 20,
+      paddingX: 24,
       logoHeight: 32,
       headingFontSize: 16,
     },
@@ -177,6 +177,17 @@ export function findMatchingPresswallTemplateId(
   }
 
   return null;
+}
+
+/** During onboarding, stale DB rows may look like Classic but use old typography. */
+export function resolveOnboardingDesignConfig(
+  config: PresswallConfig
+): PresswallConfig {
+  if (findMatchingPresswallTemplateId(config)) {
+    return config;
+  }
+
+  return applyPresswallTemplate(DEFAULT_PRESSWALL_TEMPLATE_ID);
 }
 
 export function getPresswallDesignLabel(config: PresswallConfig): string {

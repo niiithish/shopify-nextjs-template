@@ -2,11 +2,7 @@
 
 import { IconEye } from "@tabler/icons-react";
 import { useState } from "react";
-import {
-  MarqueeLayout,
-  MarqueeTrack,
-} from "@/components/presswall/marquee-layout";
-import { PublisherLogo } from "@/components/presswall/publisher-logo";
+import { PresswallStrip } from "@/components/presswall/strip-content";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -14,28 +10,15 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { getHeadingStyle } from "@/lib/presswall-heading-style";
-import {
-  getLogosPerRow,
-  getLogosRowGridClassName,
-  getLogosRowGridStyle,
-} from "@/lib/presswall-layout-style";
-import {
-  getLogoImageStyle,
-  getLogoSlotStyle,
-} from "@/lib/presswall-logo-style";
-import {
-  getMarqueeRepeatCount,
-  getMarqueeTrackStyle,
-} from "@/lib/presswall-marquee";
+import { usePresswallStripItems } from "@/hooks/use-presswall-strip-items";
+import { getLogosPerRow } from "@/lib/presswall-layout-style";
+import { getLogoImageStyle } from "@/lib/presswall-logo-style";
 import { getPreviewColors } from "@/lib/presswall-preview-colors";
 import type {
   PresswallConfig,
   PublisherCatalogItem,
   ShopPublisherSelection,
-  StorefrontPublisher,
 } from "@/lib/presswall-types";
-import { resolveStorefrontPublishers } from "@/lib/resolve-storefront-publishers";
 import { cn } from "@/lib/utils";
 
 interface PreviewProps {
@@ -46,101 +29,16 @@ interface PreviewProps {
   variant?: "default" | "canvas";
 }
 
-const headingAlignmentClass = {
-  left: "text-left",
-  center: "text-center",
-  right: "text-right",
-} as const;
-
-function LayoutContent({
-  backgroundColor,
-  config,
-  items,
-  renderLogo,
-  textColor,
-}: {
-  backgroundColor: string;
-  config: PresswallConfig;
-  items: ReturnType<typeof resolveStorefrontPublishers>;
-  renderLogo: (item: StorefrontPublisher) => React.ReactNode;
-  textColor: string;
-}) {
-  if (items.length === 0) {
-    return (
-      <Empty className="border-0 p-4">
-        <EmptyHeader>
-          <EmptyTitle>No outlets selected</EmptyTitle>
-          <EmptyDescription>
-            Pick outlets from the library to preview your presswall.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
-  if (config.layout === "marquee") {
-    const segments = getMarqueeRepeatCount(items.length);
-    const marqueeItems = Array.from({ length: segments }, (_, segment) =>
-      items.map((item) => ({ item, suffix: String(segment) }))
-    ).flat();
-
-    return (
-      <MarqueeLayout
-        backgroundColor={backgroundColor}
-        config={config}
-        textColor={textColor}
-      >
-        <MarqueeTrack
-          style={getMarqueeTrackStyle(
-            segments,
-            config.gap,
-            config.marqueeSpeed
-          )}
-        >
-          {marqueeItems.map(({ item, suffix }) => (
-            <div className="pw-mq-item shrink-0" key={`${item.id}-${suffix}`}>
-              {renderLogo(item)}
-            </div>
-          ))}
-        </MarqueeTrack>
-      </MarqueeLayout>
-    );
-  }
-
-  if (config.layout === "grid") {
-    return (
-      <div
-        className={getLogosRowGridClassName(config.logoAlignment)}
-        style={getLogosRowGridStyle(
-          getLogosPerRow(config, "desktop"),
-          config.gap
-        )}
-      >
-        {items.map((item) => (
-          <div className="flex min-w-0 items-center" key={item.id}>
-            {renderLogo(item)}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={getLogosRowGridClassName(config.logoAlignment)}
-      style={getLogosRowGridStyle(
-        getLogosPerRow(config, "desktop"),
-        config.gap
-      )}
-    >
-      {items.map((item) => (
-        <div className="flex min-w-0 items-center" key={item.id}>
-          {renderLogo(item)}
-        </div>
-      ))}
-    </div>
-  );
-}
+const previewEmptyState = (
+  <Empty className="border-0 p-4">
+    <EmptyHeader>
+      <EmptyTitle>No outlets selected</EmptyTitle>
+      <EmptyDescription>
+        Pick outlets from the library to preview your presswall.
+      </EmptyDescription>
+    </EmptyHeader>
+  </Empty>
+);
 
 export function PresswallPreview({
   config,
@@ -150,11 +48,18 @@ export function PresswallPreview({
   isLoading = false,
 }: PreviewProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const items = resolveStorefrontPublishers(config, catalog, selections);
   const isDark = theme === "dark";
   const previewColors = getPreviewColors(config, isDark);
   const logoStyle = getLogoImageStyle(config, { previewIsDark: isDark });
   const isCanvas = variant === "canvas";
+
+  const { items, renderLogo } = usePresswallStripItems({
+    catalog,
+    logoHeight: config.logoHeight,
+    logoMaxWidth: 200,
+    logoStyle,
+    selections,
+  });
 
   const containerStyle = {
     backgroundColor: previewColors.backgroundColor,
@@ -162,17 +67,6 @@ export function PresswallPreview({
     borderRadius: `${config.borderRadius}px`,
     padding: `${config.paddingY}px ${config.paddingX}px`,
   } satisfies React.CSSProperties;
-
-  const renderLogo = (item: StorefrontPublisher) => (
-    <PublisherLogo
-      customLogoSvg={item.isCustom ? item.logoSvg || undefined : undefined}
-      key={item.id}
-      logoImageUrl={item.logoImageUrl}
-      name={item.name}
-      publisherId={item.isCustom ? undefined : item.id}
-      style={getLogoSlotStyle(config.logoHeight, 200, logoStyle)}
-    />
-  );
 
   const themeToggle = (
     <div className="flex gap-1 rounded-lg border bg-background/90 p-0.5 shadow-sm backdrop-blur">
@@ -202,27 +96,12 @@ export function PresswallPreview({
       )}
       style={containerStyle}
     >
-      {config.showHeading &&
-      config.headingText &&
-      config.layout !== "marquee" ? (
-        <p
-          className={cn(
-            "m-0 font-medium uppercase tracking-[0.28em]",
-            headingAlignmentClass[config.headingAlignment]
-          )}
-          style={getHeadingStyle({
-            ...config,
-            textColor: previewColors.textColor,
-          })}
-        >
-          {config.headingText}
-        </p>
-      ) : null}
-
-      <LayoutContent
+      <PresswallStrip
         backgroundColor={previewColors.backgroundColor}
         config={config}
+        emptyState={previewEmptyState}
         items={items}
+        logosPerRow={getLogosPerRow(config, "desktop")}
         renderLogo={renderLogo}
         textColor={previewColors.textColor}
       />

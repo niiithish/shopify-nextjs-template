@@ -1,10 +1,26 @@
 import type { CSSProperties } from "react";
 import { scaleSpacingForPreview } from "@/lib/presswall-spacing";
-import type { PresswallConfig } from "@/lib/presswall-types";
+import type {
+  PresswallAlignment,
+  PresswallConfig,
+} from "@/lib/presswall-types";
+import { cn } from "@/lib/utils";
 
 interface HeadingMetricsOptions {
   compact?: boolean;
   compactFontSizeCap?: number;
+}
+
+const headingAlignmentClass = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+} as const;
+
+export function getHeadingAlignmentClass(
+  alignment: PresswallAlignment
+): string {
+  return headingAlignmentClass[alignment];
 }
 
 export function getHeadingMetrics(
@@ -47,4 +63,11 @@ export function getHeadingStyle(
     fontSize: `${metrics.fontSize}px`,
     marginBottom: `${metrics.marginBottom}px`,
   };
+}
+
+export function getHeadingClassName(alignment: PresswallAlignment): string {
+  return cn(
+    "m-0 font-medium uppercase tracking-[0.28em]",
+    getHeadingAlignmentClass(alignment)
+  );
 }

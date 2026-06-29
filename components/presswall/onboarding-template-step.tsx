@@ -32,11 +32,11 @@ interface OnboardingTemplateStepProps {
 
 type DeviceMode = "desktop" | "mobile";
 
-function templateLayoutLabel(template: PresswallTemplate): string {
-  if (template.config.layout === "marquee") {
+function templateLayoutLabel(layout: PresswallTemplate["config"]["layout"]) {
+  if (layout === "marquee") {
     return "Scroll";
   }
-  if (template.config.layout === "grid") {
+  if (layout === "grid") {
     return "Grid";
   }
   return "Bar";
@@ -93,7 +93,6 @@ function TemplateRow({
   template: PresswallTemplate;
 }) {
   const previewConfig = applyPresswallTemplate(template.id);
-
   const selectTemplate = () => editor.applyTemplate(template.id);
 
   return (
@@ -137,7 +136,7 @@ function TemplateRow({
           >
             <p className="truncate font-medium text-sm">{template.name}</p>
             <Badge className="shrink-0 text-[0.625rem]" variant="secondary">
-              {templateLayoutLabel(template)}
+              {templateLayoutLabel(template.config.layout)}
             </Badge>
           </button>
 

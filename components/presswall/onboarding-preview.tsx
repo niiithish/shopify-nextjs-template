@@ -1,34 +1,19 @@
 "use client";
 
-import {
-  MarqueeLayout,
-  MarqueeTrack,
-} from "@/components/presswall/marquee-layout";
-import { PublisherLogo } from "@/components/presswall/publisher-logo";
-import { getHeadingStyle } from "@/lib/presswall-heading-style";
+import { PresswallStrip } from "@/components/presswall/strip-content";
+import { usePresswallStripItems } from "@/hooks/use-presswall-strip-items";
 import {
   getLogosPerRow,
-  getLogosRowGridClassName,
-  getLogosRowGridStyle,
   type PresswallViewport,
 } from "@/lib/presswall-layout-style";
-import {
-  getLogoImageStyle,
-  getLogoSlotStyle,
-} from "@/lib/presswall-logo-style";
-import {
-  getMarqueeRepeatCount,
-  getMarqueeTrackStyle,
-} from "@/lib/presswall-marquee";
+import { getLogoImageStyle } from "@/lib/presswall-logo-style";
 import { getPreviewColors } from "@/lib/presswall-preview-colors";
 import { scaleSpacingForPreview } from "@/lib/presswall-spacing";
 import type {
   PresswallConfig,
   PublisherCatalogItem,
   ShopPublisherSelection,
-  StorefrontPublisher,
 } from "@/lib/presswall-types";
-import { resolveStorefrontPublishers } from "@/lib/resolve-storefront-publishers";
 import { cn } from "@/lib/utils";
 
 interface OnboardingPreviewProps {
@@ -41,97 +26,16 @@ interface OnboardingPreviewProps {
   selections: ShopPublisherSelection[];
 }
 
-const headingAlignmentClass = {
-  left: "text-left",
-  center: "text-center",
-  right: "text-right",
-} as const;
-
 /** ~25% smaller than the previous template thumbnail caps. */
 const TEMPLATE_THUMBNAIL_LOGO_HEIGHT_CAP = 12;
 const TEMPLATE_THUMBNAIL_LOGO_MAX_WIDTH = 42;
 const TEMPLATE_THUMBNAIL_PADDING_CAP = 9;
 
-function PreviewLogos({
-  backgroundColor,
-  config,
-  gap,
-  items,
-  logosPerRow,
-  renderLogo,
-  textColor,
-}: {
-  backgroundColor: string;
-  config: PresswallConfig;
-  gap: number;
-  items: ReturnType<typeof resolveStorefrontPublishers>;
-  logosPerRow: number;
-  renderLogo: (item: StorefrontPublisher) => React.ReactNode;
-  textColor: string;
-}) {
-  if (items.length === 0) {
-    return (
-      <div className="flex h-8 items-center justify-center text-[10px] text-muted-foreground/70">
-        Select outlets to preview
-      </div>
-    );
-  }
-
-  if (config.layout === "marquee") {
-    const segments = getMarqueeRepeatCount(items.length);
-    const marqueeItems = Array.from({ length: segments }, (_, segment) =>
-      items.map((item) => ({ item, suffix: String(segment) }))
-    ).flat();
-
-    return (
-      <MarqueeLayout
-        backgroundColor={backgroundColor}
-        config={config}
-        textColor={textColor}
-      >
-        <MarqueeTrack
-          style={getMarqueeTrackStyle(segments, gap, config.marqueeSpeed)}
-        >
-          {marqueeItems.map(({ item, suffix }) => (
-            <div className="pw-mq-item shrink-0" key={`${item.id}-${suffix}`}>
-              {renderLogo(item)}
-            </div>
-          ))}
-        </MarqueeTrack>
-      </MarqueeLayout>
-    );
-  }
-
-  const rowItems = items.slice(0, logosPerRow * 2);
-
-  if (config.layout === "grid") {
-    return (
-      <div
-        className={getLogosRowGridClassName(config.logoAlignment)}
-        style={getLogosRowGridStyle(logosPerRow, gap)}
-      >
-        {rowItems.map((item) => (
-          <div className="flex min-w-0 items-center" key={item.id}>
-            {renderLogo(item)}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={getLogosRowGridClassName(config.logoAlignment)}
-      style={getLogosRowGridStyle(logosPerRow, gap)}
-    >
-      {rowItems.map((item) => (
-        <div className="flex min-w-0 items-center" key={item.id}>
-          {renderLogo(item)}
-        </div>
-      ))}
-    </div>
-  );
-}
+const onboardingEmptyState = (
+  <div className="flex h-8 items-center justify-center text-[10px] text-muted-foreground/70">
+    Select outlets to preview
+  </div>
+);
 
 export function OnboardingPreview({
   catalog,
@@ -142,7 +46,6 @@ export function OnboardingPreview({
   scale = "md",
   previewTheme = "light",
 }: OnboardingPreviewProps) {
-  const items = resolveStorefrontPublishers(config, catalog, selections);
   const isDark = previewTheme === "dark";
   const previewColors = getPreviewColors(config, isDark);
   const logoStyle = getLogoImageStyle(config, { previewIsDark: isDark });
@@ -180,16 +83,15 @@ export function OnboardingPreview({
     logoMaxWidth = TEMPLATE_THUMBNAIL_LOGO_MAX_WIDTH;
   }
 
-  const renderLogo = (item: StorefrontPublisher) => (
-    <PublisherLogo
-      customLogoSvg={item.isCustom ? item.logoSvg || undefined : undefined}
-      key={item.id}
-      logoImageUrl={item.logoImageUrl}
-      name={item.name}
-      publisherId={item.isCustom ? undefined : item.id}
-      style={getLogoSlotStyle(logoHeight, logoMaxWidth, logoStyle)}
-    />
-  );
+  const { items, renderLogo } = usePresswallStripItems({
+    catalog,
+    logoHeight,
+    logoMaxWidth,
+    logoStyle,
+    selections,
+  });
+
+  const staticLimit = config.layout === "marquee" ? undefined : logosPerRow * 2;
 
   return (
     <div
@@ -201,36 +103,18 @@ export function OnboardingPreview({
         padding: `${paddingY}px ${paddingX}px`,
       }}
     >
-      {config.showHeading &&
-      config.headingText &&
-      config.layout !== "marquee" ? (
-        <p
-          className={cn(
-            "m-0 font-medium uppercase tracking-[0.28em]",
-            headingAlignmentClass[config.headingAlignment]
-          )}
-          style={getHeadingStyle(
-            {
-              ...config,
-              textColor: previewColors.textColor,
-            },
-            {
-              compact: !isLivePreview,
-              compactFontSizeCap: isTemplateThumbnail ? 6 : 8,
-            }
-          )}
-        >
-          {config.headingText}
-        </p>
-      ) : null}
-
-      <PreviewLogos
+      <PresswallStrip
         backgroundColor={previewColors.backgroundColor}
-        config={config}
-        gap={gap}
+        config={{ ...config, gap }}
+        emptyState={onboardingEmptyState}
+        headingOptions={{
+          compact: !isLivePreview,
+          compactFontSizeCap: isTemplateThumbnail ? 6 : 8,
+        }}
         items={items}
         logosPerRow={logosPerRow}
         renderLogo={renderLogo}
+        staticLayoutItemLimit={staticLimit}
         textColor={previewColors.textColor}
       />
     </div>

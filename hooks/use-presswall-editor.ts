@@ -14,6 +14,7 @@ import {
   applyPresswallTemplate,
   findMatchingPresswallTemplateId,
   type PresswallTemplateId,
+  resolveOnboardingDesignConfig,
 } from "@/lib/presswall-templates";
 import type {
   PresswallConfig,
@@ -90,11 +91,16 @@ export function usePresswallEditor(): PresswallEditor {
 
       const publishersData = await publishersRes.json();
       const presswallData = await presswallRes.json();
+      const needsOnboardingFlag = Boolean(presswallData.needsOnboarding);
 
       setCatalog(publishersData.publishers);
-      setConfig(presswallData.config);
+      setConfig(
+        needsOnboardingFlag
+          ? resolveOnboardingDesignConfig(presswallData.config)
+          : presswallData.config
+      );
       setSelected(selectedFromApi(presswallData.selections));
-      setNeedsOnboarding(Boolean(presswallData.needsOnboarding));
+      setNeedsOnboarding(needsOnboardingFlag);
     } catch {
       setLoadError(true);
       toast.error("Failed to load Presswall settings");

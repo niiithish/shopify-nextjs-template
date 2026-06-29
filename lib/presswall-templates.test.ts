@@ -5,6 +5,7 @@ import {
   findMatchingPresswallTemplateId,
   getPresswallDesignLabel,
   getResolvedPresswallTemplateConfig,
+  resolveOnboardingDesignConfig,
 } from "@/lib/presswall-templates";
 import type { PresswallConfig } from "@/lib/presswall-types";
 
@@ -79,5 +80,21 @@ describe("getPresswallDesignLabel", () => {
     };
 
     expect(getPresswallDesignLabel(config)).toBe("Custom");
+  });
+});
+
+describe("resolveOnboardingDesignConfig", () => {
+  test("replaces stale legacy rows with the classic template", () => {
+    const staleConfig = {
+      ...DEFAULT_PRESSWALL_CONFIG,
+      headingFontSize: 12,
+      headingSpacing: 20,
+    };
+
+    expect(findMatchingPresswallTemplateId(staleConfig)).toBeNull();
+
+    const resolved = resolveOnboardingDesignConfig(staleConfig);
+
+    expect(findMatchingPresswallTemplateId(resolved)).toBe("classic");
   });
 });

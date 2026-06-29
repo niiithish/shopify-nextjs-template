@@ -232,6 +232,6 @@ export async function getStorefrontPayload(
 
   return {
     ...config,
-    publishers: resolveStorefrontPublishers(config, catalog, selections),
+    publishers: resolveStorefrontPublishers(catalog, selections),
   };
 }

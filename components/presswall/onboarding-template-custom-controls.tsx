@@ -1,14 +1,12 @@
 "use client";
 
-import {
-  type Icon,
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-} from "@tabler/icons-react";
 import { useState } from "react";
 import { ColorField } from "@/components/presswall/color-field";
-import { Button } from "@/components/ui/button";
+import {
+  SegmentedAlignment,
+  SettingToggle,
+  SliderField,
+} from "@/components/presswall/shared-controls";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,31 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  PresswallAlignment,
-  PresswallConfig,
-} from "@/lib/presswall-types";
+import type { PresswallConfig } from "@/lib/presswall-types";
 import { cn } from "@/lib/utils";
-
-function sliderValue(value: number | readonly number[]): number {
-  if (typeof value === "number") {
-    return value;
-  }
-  return value[0] ?? 0;
-}
-
-const ALIGNMENT_OPTIONS: {
-  value: PresswallAlignment;
-  icon: Icon;
-  label: string;
-}[] = [
-  { value: "left", icon: IconAlignLeft, label: "Left" },
-  { value: "center", icon: IconAlignCenter, label: "Center" },
-  { value: "right", icon: IconAlignRight, label: "Right" },
-];
 
 const LAYOUT_OPTIONS: {
   label: string;
@@ -104,125 +80,6 @@ function ControlSection({
       ) : null}
       {children}
     </section>
-  );
-}
-
-function ValueBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="shrink-0 rounded-md border bg-background px-1.5 py-0.5 font-medium text-[0.6875rem] text-muted-foreground tabular-nums">
-      {children}
-    </span>
-  );
-}
-
-function SliderField({
-  disabled,
-  hint,
-  label,
-  max,
-  min,
-  onChange,
-  step,
-  unit = "px",
-  value,
-}: {
-  disabled?: boolean;
-  hint?: string;
-  label: string;
-  max: number;
-  min: number;
-  onChange: (value: number) => void;
-  step: number;
-  unit?: string;
-  value: number;
-}) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label>{label}</Label>
-        <ValueBadge>
-          {value}
-          {unit}
-        </ValueBadge>
-      </div>
-      {hint ? (
-        <p className="text-muted-foreground text-xs leading-relaxed">{hint}</p>
-      ) : null}
-      <Slider
-        disabled={disabled}
-        max={max}
-        min={min}
-        onValueChange={(next) => onChange(sliderValue(next))}
-        step={step}
-        value={[value]}
-      />
-    </div>
-  );
-}
-
-function SettingToggle({
-  checked,
-  description,
-  id,
-  label,
-  onCheckedChange,
-}: {
-  checked: boolean;
-  description?: string;
-  id: string;
-  label: string;
-  onCheckedChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0 space-y-0.5">
-        <Label htmlFor={id}>{label}</Label>
-        {description ? (
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {description}
-          </p>
-        ) : null}
-      </div>
-      <Switch
-        checked={checked}
-        className="shrink-0"
-        id={id}
-        onCheckedChange={onCheckedChange}
-      />
-    </div>
-  );
-}
-
-function SegmentedAlignment({
-  onChange,
-  value,
-}: {
-  onChange: (value: PresswallAlignment) => void;
-  value: PresswallAlignment;
-}) {
-  return (
-    <fieldset className="flex w-full rounded-lg border bg-background p-0.5">
-      {ALIGNMENT_OPTIONS.map((option) => {
-        const AlignIcon = option.icon;
-        const isSelected = value === option.value;
-
-        return (
-          <Button
-            aria-label={option.label}
-            aria-pressed={isSelected}
-            className="h-8 min-w-0 flex-1 gap-1.5 px-2 text-xs"
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            size="sm"
-            type="button"
-            variant={isSelected ? "secondary" : "ghost"}
-          >
-            <AlignIcon className="size-3.5 shrink-0" stroke={2} />
-            <span className="truncate">{option.label}</span>
-          </Button>
-        );
-      })}
-    </fieldset>
   );
 }
 

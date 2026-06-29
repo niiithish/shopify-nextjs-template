@@ -8,10 +8,12 @@ const MIGRATIONS = [
   "ALTER TABLE shop_configs ADD COLUMN heading_spacing integer DEFAULT 20 NOT NULL",
   "ALTER TABLE shop_configs ADD COLUMN logo_alignment text DEFAULT 'center' NOT NULL",
   "UPDATE shop_configs SET logo_alignment = alignment",
+  "CREATE INDEX IF NOT EXISTS shop_publishers_shop_idx ON shop_publishers (shop)",
 ];
 
-function isDuplicateColumnError(error: unknown): boolean {
+function isIgnorableMigrationError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
+
   return (
     message.includes("duplicate column") || message.includes("already exists")
   );
@@ -24,7 +26,7 @@ for (const sql of MIGRATIONS) {
     await client.execute(sql);
     console.log(`Applied: ${sql}`);
   } catch (error) {
-    if (isDuplicateColumnError(error)) {
+    if (isIgnorableMigrationError(error)) {
       console.log(`Skipped (exists): ${sql}`);
       continue;
     }

@@ -1,6 +1,5 @@
 import { isBundledPublisherId } from "@/lib/bundled-publishers";
 import type {
-  PresswallConfig,
   PublisherCatalogItem,
   ShopPublisherSelection,
   StorefrontPublisher,
@@ -22,7 +21,6 @@ function resolvePublisherUrl(
 }
 
 export function resolveStorefrontPublishers(
-  _config: PresswallConfig,
   catalog: PublisherCatalogItem[],
   selections: ShopPublisherSelection[]
 ): StorefrontPublisher[] {

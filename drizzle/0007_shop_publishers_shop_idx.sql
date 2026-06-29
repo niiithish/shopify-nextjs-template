@@ -1,0 +1,1 @@
+CREATE INDEX `shop_publishers_shop_idx` ON `shop_publishers` (`shop`);

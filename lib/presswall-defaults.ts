@@ -15,8 +15,8 @@ const BASE_PRESSWALL_CONFIG = {
   backgroundColor: "transparent",
   textColor: "#111111",
   borderRadius: 0,
-  paddingY: 16,
-  paddingX: 16,
+  paddingY: 20,
+  paddingX: 24,
   marqueeSpeed: 30,
   grayscaleOpacity: 70,
 } satisfies Omit<PresswallConfig, "gap" | "headingSpacing">;

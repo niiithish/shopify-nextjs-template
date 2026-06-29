@@ -1,12 +1,11 @@
 "use client";
 
-import {
-  type Icon,
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-} from "@tabler/icons-react";
 import { ColorField } from "@/components/presswall/color-field";
+import {
+  SegmentedAlignment,
+  SettingToggle,
+  SliderField,
+} from "@/components/presswall/shared-controls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,36 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type {
-  PresswallAlignment,
-  PresswallConfig,
-} from "@/lib/presswall-types";
-import { cn } from "@/lib/utils";
-
-function sliderValue(value: number | readonly number[]): number {
-  if (typeof value === "number") {
-    return value;
-  }
-  return value[0] ?? 0;
-}
-
-const ALIGNMENT_OPTIONS: {
-  value: PresswallAlignment;
-  icon: Icon;
-  label: string;
-}[] = [
-  { value: "left", icon: IconAlignLeft, label: "Left" },
-  { value: "center", icon: IconAlignCenter, label: "Center" },
-  { value: "right", icon: IconAlignRight, label: "Right" },
-];
+import type { PresswallConfig } from "@/lib/presswall-types";
 
 interface StyleControlsProps {
   config: PresswallConfig;
@@ -54,43 +30,6 @@ interface StyleControlsProps {
     key: K,
     value: PresswallConfig[K]
   ) => void;
-}
-
-function AlignmentPicker({
-  onChange,
-  value,
-}: {
-  onChange: (value: PresswallAlignment) => void;
-  value: PresswallAlignment;
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-1.5">
-      {ALIGNMENT_OPTIONS.map((option) => {
-        const AlignIcon = option.icon;
-        const isSelected = value === option.value;
-
-        return (
-          <button
-            aria-pressed={isSelected}
-            className={cn(
-              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2.5 text-center transition-colors",
-              isSelected
-                ? "border-ring bg-muted text-foreground"
-                : "border-border bg-background text-foreground hover:bg-muted/50"
-            )}
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            type="button"
-          >
-            <AlignIcon className="size-3.5 shrink-0" stroke={2} />
-            <span className="w-full truncate text-[0.625rem] leading-none">
-              {option.label}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 export function StyleControls({ config, onUpdate }: StyleControlsProps) {
@@ -103,19 +42,13 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
       </TabsList>
 
       <TabsContent className="mt-4 flex flex-col gap-4" value="content">
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <div>
-            <Label htmlFor="show-heading">Show heading</Label>
-            <p className="text-muted-foreground text-xs">
-              Display a label above your logos
-            </p>
-          </div>
-          <Switch
-            checked={config.showHeading}
-            id="show-heading"
-            onCheckedChange={(checked) => onUpdate("showHeading", checked)}
-          />
-        </div>
+        <SettingToggle
+          checked={config.showHeading}
+          description="Display a label above your logos"
+          id="show-heading"
+          label="Show heading"
+          onCheckedChange={(checked) => onUpdate("showHeading", checked)}
+        />
 
         <div className="grid gap-2">
           <Label htmlFor="heading-text">Heading text</Label>
@@ -130,35 +63,27 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
 
         {config.showHeading ? (
           <>
-            <div className="grid gap-2">
-              <Label>Heading size ({config.headingFontSize}px)</Label>
-              <Slider
-                max={24}
-                min={10}
-                onValueChange={(value) =>
-                  onUpdate("headingFontSize", sliderValue(value))
-                }
-                step={1}
-                value={[config.headingFontSize]}
-              />
-            </div>
+            <SliderField
+              label="Heading size"
+              max={24}
+              min={10}
+              onChange={(value) => onUpdate("headingFontSize", value)}
+              step={1}
+              value={config.headingFontSize}
+            />
 
-            <div className="grid gap-2">
-              <Label>Space below heading ({config.headingSpacing}px)</Label>
-              <Slider
-                max={48}
-                min={8}
-                onValueChange={(value) =>
-                  onUpdate("headingSpacing", sliderValue(value))
-                }
-                step={2}
-                value={[config.headingSpacing]}
-              />
-            </div>
+            <SliderField
+              label="Space below heading"
+              max={48}
+              min={8}
+              onChange={(value) => onUpdate("headingSpacing", value)}
+              step={2}
+              value={config.headingSpacing}
+            />
 
             <div className="grid gap-2">
               <Label>Heading alignment</Label>
-              <AlignmentPicker
+              <SegmentedAlignment
                 onChange={(value) => onUpdate("headingAlignment", value)}
                 value={config.headingAlignment}
               />
@@ -231,32 +156,25 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
         </div>
 
         {config.colorMode === "muted" ? (
-          <div className="grid gap-2">
-            <Label>Muted opacity ({config.grayscaleOpacity}%)</Label>
-            <Slider
-              max={100}
-              min={20}
-              onValueChange={(value) =>
-                onUpdate("grayscaleOpacity", sliderValue(value))
-              }
-              step={5}
-              value={[config.grayscaleOpacity]}
-            />
-          </div>
+          <SliderField
+            label="Muted opacity"
+            max={100}
+            min={20}
+            onChange={(value) => onUpdate("grayscaleOpacity", value)}
+            step={5}
+            unit="%"
+            value={config.grayscaleOpacity}
+          />
         ) : null}
 
-        <div className="grid gap-2">
-          <Label>Logo height ({config.logoHeight}px)</Label>
-          <Slider
-            max={80}
-            min={16}
-            onValueChange={(value) =>
-              onUpdate("logoHeight", sliderValue(value))
-            }
-            step={2}
-            value={[config.logoHeight]}
-          />
-        </div>
+        <SliderField
+          label="Logo height"
+          max={80}
+          min={16}
+          onChange={(value) => onUpdate("logoHeight", value)}
+          step={2}
+          value={config.logoHeight}
+        />
       </TabsContent>
 
       <TabsContent className="mt-4 flex flex-col gap-4" value="layout">
@@ -286,107 +204,82 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
 
         {config.layout === "bar" || config.layout === "grid" ? (
           <>
-            <div className="grid gap-2">
-              <Label>
-                Logos per row — desktop ({config.logosPerRowDesktop})
-              </Label>
-              <Slider
-                max={8}
-                min={2}
-                onValueChange={(value) =>
-                  onUpdate("logosPerRowDesktop", sliderValue(value))
-                }
-                step={1}
-                value={[config.logosPerRowDesktop]}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Logos per row — mobile ({config.logosPerRowMobile})</Label>
-              <Slider
-                max={4}
-                min={1}
-                onValueChange={(value) =>
-                  onUpdate("logosPerRowMobile", sliderValue(value))
-                }
-                step={1}
-                value={[config.logosPerRowMobile]}
-              />
-            </div>
+            <SliderField
+              label="Logos per row — desktop"
+              max={8}
+              min={2}
+              onChange={(value) => onUpdate("logosPerRowDesktop", value)}
+              step={1}
+              unit=""
+              value={config.logosPerRowDesktop}
+            />
+            <SliderField
+              label="Logos per row — mobile"
+              max={4}
+              min={1}
+              onChange={(value) => onUpdate("logosPerRowMobile", value)}
+              step={1}
+              unit=""
+              value={config.logosPerRowMobile}
+            />
           </>
         ) : null}
 
         <div className="grid gap-2">
           <Label>Logo alignment</Label>
-          <AlignmentPicker
+          <SegmentedAlignment
             onChange={(value) => onUpdate("logoAlignment", value)}
             value={config.logoAlignment}
           />
         </div>
 
-        <div className="grid gap-2">
-          <Label>Gap ({config.gap}px)</Label>
-          <Slider
-            max={64}
-            min={8}
-            onValueChange={(value) => onUpdate("gap", sliderValue(value))}
-            step={2}
-            value={[config.gap]}
-          />
-        </div>
+        <SliderField
+          label="Gap"
+          max={64}
+          min={8}
+          onChange={(value) => onUpdate("gap", value)}
+          step={2}
+          value={config.gap}
+        />
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label>Padding Y ({config.paddingY}px)</Label>
-            <Slider
-              max={80}
-              min={0}
-              onValueChange={(value) =>
-                onUpdate("paddingY", sliderValue(value))
-              }
-              step={2}
-              value={[config.paddingY]}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Padding X ({config.paddingX}px)</Label>
-            <Slider
-              max={80}
-              min={0}
-              onValueChange={(value) =>
-                onUpdate("paddingX", sliderValue(value))
-              }
-              step={2}
-              value={[config.paddingX]}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          <Label>Corner radius ({config.borderRadius}px)</Label>
-          <Slider
-            max={32}
+          <SliderField
+            label="Padding Y"
+            max={80}
             min={0}
-            onValueChange={(value) =>
-              onUpdate("borderRadius", sliderValue(value))
-            }
+            onChange={(value) => onUpdate("paddingY", value)}
             step={2}
-            value={[config.borderRadius]}
+            value={config.paddingY}
+          />
+          <SliderField
+            label="Padding X"
+            max={80}
+            min={0}
+            onChange={(value) => onUpdate("paddingX", value)}
+            step={2}
+            value={config.paddingX}
           />
         </div>
 
+        <SliderField
+          label="Corner radius"
+          max={32}
+          min={0}
+          onChange={(value) => onUpdate("borderRadius", value)}
+          step={2}
+          value={config.borderRadius}
+        />
+
         {config.layout === "marquee" ? (
-          <div className="grid gap-2">
-            <Label>Marquee speed ({config.marqueeSpeed}s)</Label>
-            <Slider
-              max={80}
-              min={10}
-              onValueChange={(value) =>
-                onUpdate("marqueeSpeed", sliderValue(value))
-              }
-              step={5}
-              value={[config.marqueeSpeed]}
-            />
-          </div>
+          <SliderField
+            label="Marquee speed"
+            max={80}
+            min={10}
+            onChange={(value) => onUpdate("marqueeSpeed", value)}
+            step={5}
+            unit="s"
+            value={config.marqueeSpeed}
+          />
         ) : null}
       </TabsContent>
     </Tabs>
