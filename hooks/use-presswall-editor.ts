@@ -11,7 +11,7 @@ import {
 } from "@/lib/presswall-selections";
 import {
   applyPresswallTemplate,
-  DEFAULT_PRESSWALL_TEMPLATE_ID,
+  findMatchingPresswallTemplateId,
   type PresswallTemplateId,
 } from "@/lib/presswall-templates";
 import type {
@@ -31,6 +31,7 @@ export interface PresswallEditor {
   config: PresswallConfig;
   isLoading: boolean;
   isSaving: boolean;
+  matchedTemplateId: PresswallTemplateId | null;
   movePublisher: (index: number, direction: -1 | 1) => void;
   needsOnboarding: boolean;
   removePublisher: (key: string) => void;
@@ -38,12 +39,10 @@ export interface PresswallEditor {
   search: string;
   selected: SelectedPublisher[];
   selectedIds: Set<string>;
-  selectedTemplateId: PresswallTemplateId;
   selections: ShopPublisherSelection[];
   setCategory: (value: string) => void;
   setNeedsOnboarding: (value: boolean) => void;
   setSearch: (value: string) => void;
-  setSelectedTemplateId: (value: PresswallTemplateId) => void;
   togglePublisher: (publisher: PublisherCatalogItem) => void;
   unavailableCount: number;
   updateConfig: <K extends keyof PresswallConfig>(
@@ -63,8 +62,11 @@ export function usePresswallEditor(): PresswallEditor {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] =
-    useState<PresswallTemplateId>(DEFAULT_PRESSWALL_TEMPLATE_ID);
+
+  const matchedTemplateId = useMemo(
+    () => findMatchingPresswallTemplateId(config),
+    [config]
+  );
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -208,7 +210,6 @@ export function usePresswallEditor(): PresswallEditor {
   );
 
   const applyTemplate = useCallback((templateId: PresswallTemplateId) => {
-    setSelectedTemplateId(templateId);
     setConfig((current) => applyPresswallTemplate(templateId, current));
   }, []);
 
@@ -231,7 +232,7 @@ export function usePresswallEditor(): PresswallEditor {
     search,
     selected,
     selectedIds,
-    selectedTemplateId,
+    matchedTemplateId,
     selections,
     unavailableCount,
     addCustomPublisher,
@@ -242,7 +243,6 @@ export function usePresswallEditor(): PresswallEditor {
     setCategory,
     setNeedsOnboarding,
     setSearch,
-    setSelectedTemplateId,
     togglePublisher,
     updateConfig,
   };

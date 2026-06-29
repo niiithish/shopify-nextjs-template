@@ -97,36 +97,42 @@ export function OnboardingTemplateCustomControls({
             />
           </div>
 
-          <div className="grid gap-1.5">
-            <Label className="text-sm">Heading alignment</Label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {ALIGNMENT_OPTIONS.map((option) => {
-                const AlignIcon = option.icon;
-                const isSelected = config.alignment === option.value;
+          {config.showHeading || config.layout === "bar" ? (
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Alignment</Label>
+              <p className="text-muted-foreground text-xs">
+                {config.layout === "bar"
+                  ? "Heading and horizontal logo bar"
+                  : "Heading position"}
+              </p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {ALIGNMENT_OPTIONS.map((option) => {
+                  const AlignIcon = option.icon;
+                  const isSelected = config.alignment === option.value;
 
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={cn(
-                      "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2 text-center transition-colors",
-                      isSelected
-                        ? "border-ring bg-muted text-foreground"
-                        : "border-border bg-background text-foreground hover:bg-muted/50"
-                    )}
-                    disabled={!config.showHeading}
-                    key={option.value}
-                    onClick={() => onUpdate("alignment", option.value)}
-                    type="button"
-                  >
-                    <AlignIcon className="size-3.5 shrink-0" stroke={2} />
-                    <span className="w-full truncate text-[0.625rem] leading-none">
-                      {option.label}
-                    </span>
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={cn(
+                        "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2 text-center transition-colors",
+                        isSelected
+                          ? "border-ring bg-muted text-foreground"
+                          : "border-border bg-background text-foreground hover:bg-muted/50"
+                      )}
+                      key={option.value}
+                      onClick={() => onUpdate("alignment", option.value)}
+                      type="button"
+                    >
+                      <AlignIcon className="size-3.5 shrink-0" stroke={2} />
+                      <span className="w-full truncate text-[0.625rem] leading-none">
+                        {option.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : null}
         </ControlSection>
 
         <Separator />
@@ -149,36 +155,6 @@ export function OnboardingTemplateCustomControls({
                 <SelectItem value="marquee">Auto-scroll</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="grid gap-1.5">
-            <Label className="text-sm">Logo alignment</Label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {ALIGNMENT_OPTIONS.map((option) => {
-                const AlignIcon = option.icon;
-                const isSelected = config.alignment === option.value;
-
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={cn(
-                      "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2 text-center transition-colors",
-                      isSelected
-                        ? "border-ring bg-muted text-foreground"
-                        : "border-border bg-background text-foreground hover:bg-muted/50"
-                    )}
-                    key={`layout-${option.value}`}
-                    onClick={() => onUpdate("alignment", option.value)}
-                    type="button"
-                  >
-                    <AlignIcon className="size-3.5 shrink-0" stroke={2} />
-                    <span className="w-full truncate text-[0.625rem] leading-none">
-                      {option.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </ControlSection>
 

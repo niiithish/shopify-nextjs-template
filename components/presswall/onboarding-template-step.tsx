@@ -223,7 +223,7 @@ export function OnboardingTemplateStep({
                     <TemplateRow
                       catalog={editor.catalog}
                       editor={editor}
-                      isSelected={editor.selectedTemplateId === template.id}
+                      isSelected={editor.matchedTemplateId === template.id}
                       key={template.id}
                       selections={editor.selections}
                       template={template}

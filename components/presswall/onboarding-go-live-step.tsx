@@ -9,7 +9,7 @@ import type { PresswallEditor } from "@/hooks/use-presswall-editor";
 import { adminFetch } from "@/lib/admin-fetch";
 import {
   getConfigPreviewTheme,
-  getPresswallTemplate,
+  getPresswallDesignLabel,
 } from "@/lib/presswall-templates";
 import type { ThemeActivationStatus } from "@/lib/theme-activation";
 
@@ -78,7 +78,7 @@ export function OnboardingGoLiveStep({
     }
   };
 
-  const template = getPresswallTemplate(editor.selectedTemplateId);
+  const designLabel = getPresswallDesignLabel(editor.config);
   const isActive = status?.isActive ?? false;
 
   return (
@@ -141,7 +141,9 @@ export function OnboardingGoLiveStep({
         </div>
 
         <p className="text-center text-muted-foreground text-xs">
-          {template.name} template · {editor.selected.length} outlet
+          {designLabel}
+          {editor.matchedTemplateId ? " template" : " design"} ·{" "}
+          {editor.selected.length} outlet
           {editor.selected.length === 1 ? "" : "s"}
         </p>
       </div>

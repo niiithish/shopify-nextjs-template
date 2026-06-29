@@ -175,3 +175,46 @@ export function applyPresswallTemplate(
     ...template.config,
   };
 }
+
+const PRESSWALL_CONFIG_KEYS = Object.keys(
+  DEFAULT_PRESSWALL_CONFIG
+) as (keyof PresswallConfig)[];
+
+export function presswallConfigsEqual(
+  left: PresswallConfig,
+  right: PresswallConfig
+): boolean {
+  return PRESSWALL_CONFIG_KEYS.every((key) => left[key] === right[key]);
+}
+
+export function getResolvedPresswallTemplateConfig(
+  templateId: PresswallTemplateId
+): PresswallConfig {
+  return applyPresswallTemplate(templateId, DEFAULT_PRESSWALL_CONFIG);
+}
+
+export function findMatchingPresswallTemplateId(
+  config: PresswallConfig
+): PresswallTemplateId | null {
+  for (const template of PRESSWALL_TEMPLATES) {
+    if (
+      presswallConfigsEqual(
+        config,
+        getResolvedPresswallTemplateConfig(template.id)
+      )
+    ) {
+      return template.id;
+    }
+  }
+
+  return null;
+}
+
+export function getPresswallDesignLabel(config: PresswallConfig): string {
+  const matchedTemplateId = findMatchingPresswallTemplateId(config);
+  if (!matchedTemplateId) {
+    return "Custom";
+  }
+
+  return getPresswallTemplate(matchedTemplateId).name;
+}
