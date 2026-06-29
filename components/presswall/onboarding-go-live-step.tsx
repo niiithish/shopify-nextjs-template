@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import type { PresswallEditor } from "@/hooks/use-presswall-editor";
 import { adminFetch } from "@/lib/admin-fetch";
 import {
+  getConfigPreviewTheme,
   getPresswallTemplate,
-  getTemplatePreviewTheme,
 } from "@/lib/presswall-templates";
 import type { ThemeActivationStatus } from "@/lib/theme-activation";
 
@@ -91,7 +91,7 @@ export function OnboardingGoLiveStep({
         <OnboardingPreview
           catalog={editor.catalog}
           config={editor.config}
-          previewTheme={getTemplatePreviewTheme(editor.selectedTemplateId)}
+          previewTheme={getConfigPreviewTheme(editor.config)}
           scale="lg"
           selections={editor.selections}
         />

@@ -15,7 +15,13 @@ export function OnboardingFlow({ editor }: OnboardingFlowProps) {
 
   return (
     <div className="flex h-svh flex-col overflow-hidden bg-background">
-      <div className="flex min-h-0 flex-1 flex-col items-center overflow-hidden px-6 pt-4">
+      <div
+        className={
+          step === 1
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 sm:px-6"
+            : "flex min-h-0 flex-1 flex-col items-center overflow-hidden px-6 pt-4"
+        }
+      >
         <div
           className="fade-in flex h-full min-h-0 w-full animate-in flex-col duration-300"
           key={step}
