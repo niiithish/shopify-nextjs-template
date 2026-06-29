@@ -4,7 +4,7 @@ import type { PresswallConfig } from "@/lib/presswall-types";
 const BASE_PRESSWALL_CONFIG = {
   headingText: "As seen on",
   showHeading: true,
-  headingFontSize: 12,
+  headingFontSize: 16,
   colorMode: "mono",
   layout: "bar",
   logoHeight: 32,

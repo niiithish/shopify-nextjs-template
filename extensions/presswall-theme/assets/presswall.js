@@ -51,8 +51,8 @@ const INLINE_RGB_COLOR_PATTERN =
     const paddingY = sanitizeCssSize(config.paddingY, 16);
     const paddingX = sanitizeCssSize(config.paddingX, 16);
     const gap = sanitizeCssSize(config.gap, 36);
-    const headingFontSize = sanitizeCssSize(config.headingFontSize, 12);
-    const headingSpacing = sanitizeCssSize(config.headingSpacing, 20);
+    const headingFontSize = sanitizeCssSize(config.headingFontSize, 16);
+    const headingSpacing = sanitizeCssSize(config.headingSpacing, 26);
     const logosPerRowDesktop = clampInt(
       config.logosPerRowDesktop ?? config.logosPerRow,
       4,

@@ -84,6 +84,17 @@
     linear-gradient(-45deg, transparent 75%, oklch(0.22 0 0) 75%);
 }
 
+.presswall-canvas-bg-dots {
+  background-color: oklch(0.97 0 0);
+  background-image: radial-gradient(oklch(0.82 0 0) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.presswall-canvas-bg-dots-dark {
+  background-color: oklch(0.18 0 0);
+  background-image: radial-gradient(oklch(0.3 0 0) 1px, transparent 1px);
+}
+
 .presswall-logo-slot {
   display: inline-flex;
   flex-shrink: 0;

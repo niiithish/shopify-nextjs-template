@@ -90,10 +90,7 @@ function PreviewLogos({
         style={getLogosRowGridStyle(logosPerRow, gap)}
       >
         {rowItems.map((item) => (
-          <div
-            className="flex min-w-0 items-center justify-center"
-            key={item.id}
-          >
+          <div className="flex min-w-0 items-center" key={item.id}>
             {renderLogo(item)}
           </div>
         ))}
@@ -107,7 +104,7 @@ function PreviewLogos({
       style={getLogosRowGridStyle(logosPerRow, gap)}
     >
       {rowItems.map((item) => (
-        <div className="flex min-w-0 items-center justify-center" key={item.id}>
+        <div className="flex min-w-0 items-center" key={item.id}>
           {renderLogo(item)}
         </div>
       ))}
@@ -134,7 +131,7 @@ export function OnboardingPreview({
   const logosPerRow = getLogosPerRow(config, viewport);
   const logoHeight = isLivePreview
     ? config.logoHeight
-    : Math.min(config.logoHeight, 20);
+    : Math.min(config.logoHeight, 16);
   const gap = isLivePreview
     ? config.gap
     : scaleSpacingForPreview(config.gap, config.logoHeight, logoHeight);
@@ -146,7 +143,7 @@ export function OnboardingPreview({
     : Math.min(config.paddingX, 12);
 
   const renderLogo = (item: StorefrontPublisher) => {
-    const maxWidth = isLivePreview ? 200 : 72;
+    const maxWidth = isLivePreview ? 200 : 56;
 
     return (
       <PublisherLogo

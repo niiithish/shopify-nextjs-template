@@ -36,8 +36,8 @@ export const shopConfigs = sqliteTable("shop_configs", {
   showHeading: integer("show_heading", { mode: "boolean" })
     .notNull()
     .default(true),
-  headingFontSize: integer("heading_font_size").notNull().default(12),
-  headingSpacing: integer("heading_spacing").notNull().default(20),
+  headingFontSize: integer("heading_font_size").notNull().default(16),
+  headingSpacing: integer("heading_spacing").notNull().default(26),
   colorMode: text("color_mode").notNull().default("mono"),
   layout: text("layout").notNull().default("bar"),
   logoHeight: integer("logo_height").notNull().default(32),

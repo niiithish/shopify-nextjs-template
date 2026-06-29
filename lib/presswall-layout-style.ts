@@ -2,9 +2,9 @@ import type { PresswallConfig } from "@/lib/presswall-types";
 import { cn } from "@/lib/utils";
 
 const rowAlignmentClass = {
-  left: "justify-start",
-  center: "justify-center",
-  right: "justify-end",
+  left: "justify-items-start",
+  center: "justify-items-center",
+  right: "justify-items-end",
 } as const;
 
 export type PresswallViewport = "desktop" | "mobile";
@@ -24,7 +24,8 @@ export function getLogosRowGridStyle(
 ): React.CSSProperties {
   return {
     gap: `${gap}px`,
-    gridTemplateColumns: `repeat(${logosPerRow}, auto)`,
+    gridTemplateColumns: `repeat(${logosPerRow}, minmax(0, 1fr))`,
+    width: "100%",
   };
 }
 

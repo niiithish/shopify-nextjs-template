@@ -97,10 +97,7 @@ function LayoutContent({
         )}
       >
         {items.map((item) => (
-          <div
-            className="flex min-w-0 items-center justify-center"
-            key={item.id}
-          >
+          <div className="flex min-w-0 items-center" key={item.id}>
             {renderLogo(item)}
           </div>
         ))}
@@ -117,7 +114,7 @@ function LayoutContent({
       )}
     >
       {items.map((item) => (
-        <div className="flex min-w-0 items-center justify-center" key={item.id}>
+        <div className="flex min-w-0 items-center" key={item.id}>
           {renderLogo(item)}
         </div>
       ))}

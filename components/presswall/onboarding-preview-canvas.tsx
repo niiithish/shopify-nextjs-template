@@ -83,8 +83,8 @@ export function OnboardingPreviewCanvas({
   return (
     <div
       className={cn(
-        "presswall-canvas-bg relative h-full w-full overflow-auto",
-        previewTheme === "dark" && "presswall-canvas-bg-dark"
+        "presswall-canvas-bg-dots relative h-full w-full overflow-auto",
+        previewTheme === "dark" && "presswall-canvas-bg-dots-dark"
       )}
       ref={containerRef}
     >

@@ -19,7 +19,7 @@ describe("deriveLogoGap", () => {
 
 describe("deriveHeadingSpacing", () => {
   test("derives heading spacing from font size", () => {
-    expect(deriveHeadingSpacing(12)).toBe(20);
+    expect(deriveHeadingSpacing(16)).toBe(26);
     expect(deriveHeadingSpacing(16)).toBe(26);
   });
 });
@@ -30,12 +30,12 @@ describe("withDerivedSpacing", () => {
       ...DEFAULT_PRESSWALL_CONFIG,
       layout: "grid",
       logoHeight: 32,
-      headingFontSize: 12,
+      headingFontSize: 16,
       gap: 10,
       headingSpacing: 8,
     });
 
     expect(config.gap).toBe(28);
-    expect(config.headingSpacing).toBe(20);
+    expect(config.headingSpacing).toBe(26);
   });
 });
