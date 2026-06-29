@@ -1,13 +1,14 @@
 "use client";
 
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import { useContext } from "react";
+import {
+  ThemeActivationContext,
+  type ThemeActivationContextValue,
+} from "@/components/presswall/theme-activation-provider";
 import { Button } from "@/components/ui/button";
-import { adminFetch } from "@/lib/admin-fetch";
-import type { ThemeActivationStatus } from "@/lib/theme-activation";
+import { useThemeActivationStatus } from "@/hooks/use-theme-activation-status";
 import { cn } from "@/lib/utils";
-
-const DISMISS_KEY = "presswall-theme-activation-dismissed";
 
 interface ThemeActivationBannerProps {
   className?: string;
@@ -18,59 +19,29 @@ export function ThemeActivationBanner({
   className,
   variant = "default",
 }: ThemeActivationBannerProps) {
-  const [status, setStatus] = useState<ThemeActivationStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const shared = useContext(ThemeActivationContext);
+  const local = useThemeActivationStatus({ enabled: shared === null });
+  const activation = shared ?? local;
 
-  const loadStatus = useCallback(async () => {
-    setIsLoading(true);
+  return (
+    <ThemeActivationBannerContent
+      activation={activation}
+      className={className}
+      variant={variant}
+    />
+  );
+}
 
-    try {
-      const response = await adminFetch("/api/theme-activation");
-      if (!response.ok) {
-        setStatus(null);
-        return;
-      }
-
-      const data = (await response.json()) as ThemeActivationStatus;
-      setStatus(data);
-
-      if (data.isActive) {
-        sessionStorage.removeItem(DISMISS_KEY);
-        setIsDismissed(false);
-      }
-    } catch {
-      setStatus(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setIsDismissed(sessionStorage.getItem(DISMISS_KEY) === "1");
-    loadStatus().catch(() => undefined);
-  }, [loadStatus]);
-
-  useEffect(() => {
-    const refreshStatus = () => {
-      if (document.visibilityState === "visible") {
-        loadStatus().catch(() => undefined);
-      }
-    };
-
-    document.addEventListener("visibilitychange", refreshStatus);
-    window.addEventListener("focus", refreshStatus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", refreshStatus);
-      window.removeEventListener("focus", refreshStatus);
-    };
-  }, [loadStatus]);
-
-  const dismiss = () => {
-    sessionStorage.setItem(DISMISS_KEY, "1");
-    setIsDismissed(true);
-  };
+function ThemeActivationBannerContent({
+  activation,
+  className,
+  variant,
+}: {
+  activation: ThemeActivationContextValue;
+  className?: string;
+  variant: "default" | "compact";
+}) {
+  const { dismiss, isDismissed, isLoading, status } = activation;
 
   if (isLoading || isDismissed || !status || status.isActive) {
     return null;

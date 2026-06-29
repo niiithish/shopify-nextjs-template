@@ -7,6 +7,16 @@
   ],
   "overrides": [
     {
+      "includes": ["shopify-env.d.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNamespace": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["components/presswall/svg-logo.tsx"],
       "linter": {
         "rules": {

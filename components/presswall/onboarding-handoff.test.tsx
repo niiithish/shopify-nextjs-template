@@ -1,0 +1,149 @@
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { DEFAULT_PRESSWALL_CONFIG } from "@/lib/presswall-defaults";
+import type {
+  PublisherCatalogItem,
+  ShopPublisherSelection,
+} from "@/lib/presswall-types";
+
+const CATALOG_FIXTURE: PublisherCatalogItem[] = [
+  {
+    id: "forbes",
+    name: "Forbes",
+    category: "Business",
+    logoSvg: "<svg/>",
+    logoMonoSvg: "<svg/>",
+    websiteUrl: "https://forbes.com",
+  },
+];
+
+const STEP_TWO_LABEL = /Step 2 of 3 — Design your press strip/;
+
+let savedSelections: ShopPublisherSelection[] | undefined;
+
+function setupHandoffMocks() {
+  savedSelections = undefined;
+
+  mock.module("@/lib/fetch-presswall-client-data", () => ({
+    fetchPresswallClientData: () =>
+      Promise.resolve({
+        catalog: CATALOG_FIXTURE,
+        config: DEFAULT_PRESSWALL_CONFIG,
+        needsOnboarding: true,
+        selected: [],
+      }),
+  }));
+
+  mock.module("@/lib/admin-fetch", () => ({
+    adminFetch: (path: string, init?: RequestInit) => {
+      if (path === "/api/theme-activation") {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              activateEmbedUrl: "https://example.com/theme",
+              activateSectionUrl: "https://example.com/section",
+              appBlockEnabled: false,
+              appEmbedEnabled: true,
+              isActive: true,
+              themeId: "gid://shopify/Theme/1",
+              themeName: "Dawn",
+            }),
+        });
+      }
+
+      if (path === "/api/presswall" && init?.method === "PUT") {
+        const body = JSON.parse(String(init.body)) as {
+          selections: ShopPublisherSelection[];
+        };
+        savedSelections = body.selections;
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      }
+
+      return Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({}),
+      });
+    },
+    captureIdTokenFromUrl: () => undefined,
+    stripStaleIdTokenFromUrl: () => undefined,
+    getSessionToken: () => Promise.resolve("test-token"),
+  }));
+}
+
+describe("onboarding completion handoff", () => {
+  afterEach(() => {
+    cleanup();
+    mock.restore();
+  });
+
+  beforeEach(() => {
+    mock.restore();
+    setupHandoffMocks();
+  });
+
+  test("finishing onboarding shows merchant dashboard with outlets chosen in step 1", async () => {
+    const [{ usePresswallEditor }, { AdminDashboardView }] = await Promise.all([
+      import("@/hooks/use-presswall-editor"),
+      import("./admin-dashboard"),
+    ]);
+
+    function HandoffHarness() {
+      const editor = usePresswallEditor();
+      return <AdminDashboardView editor={editor} />;
+    }
+
+    const view = render(<HandoffHarness />);
+
+    await waitFor(() => {
+      expect(view.getByText("Step 1 of 3 — Add your press logos")).toBeTruthy();
+    });
+
+    fireEvent.click(view.getByRole("button", { name: "Forbes" }));
+    fireEvent.click(view.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(view.getByText(STEP_TWO_LABEL)).toBeTruthy();
+    });
+
+    fireEvent.click(view.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(
+        view.getByText("Step 3 of 3 — Go live on your store")
+      ).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(view.getByText("Presswall is active")).toBeTruthy();
+    });
+
+    fireEvent.click(view.getByRole("button", { name: "Open editor" }));
+
+    await waitFor(() => {
+      expect(savedSelections).toEqual([{ publisherId: "forbes", position: 0 }]);
+      expect(view.getByText("Quick actions")).toBeTruthy();
+      expect(view.getByText("Configured")).toBeTruthy();
+      expect(view.getByText("Classic")).toBeTruthy();
+      expect(view.getByText("Publishers on your strip")).toBeTruthy();
+      expect(
+        view.getByText("Outlets").closest("[data-slot=card]")
+      ).toBeTruthy();
+      expect(
+        view
+          .getByText("Outlets")
+          .closest("[data-slot=card]")
+          ?.querySelector("[data-slot=card-title]")?.textContent
+      ).toBe("1");
+      expect(view.queryByText("Step 1 of 3 — Add your press logos")).toBeNull();
+      expect(view.queryByText("Discard")).toBeNull();
+      expect(
+        view.container.querySelector(".presswall-app-nav-host")
+      ).toBeTruthy();
+    });
+  });
+});

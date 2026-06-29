@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { adminFetch } from "@/lib/admin-fetch";
+import { fetchPresswallClientData } from "@/lib/fetch-presswall-client-data";
 import { DEFAULT_PRESSWALL_CONFIG } from "@/lib/presswall-defaults";
 import {
   buildSelections,
   countUnavailableSelections,
-  selectedFromApi,
 } from "@/lib/presswall-selections";
 import { applyDerivedSpacingPatch } from "@/lib/presswall-spacing";
 import {
@@ -15,7 +15,6 @@ import {
   findMatchingPresswallTemplateId,
   type PresswallTemplateId,
   presswallConfigsEqual,
-  resolveOnboardingDesignConfig,
 } from "@/lib/presswall-templates";
 import type {
   PresswallConfig,
@@ -84,34 +83,16 @@ export function usePresswallEditor(): PresswallEditor {
     setLoadError(false);
 
     try {
-      const [publishersRes, presswallRes] = await Promise.all([
-        adminFetch("/api/publishers"),
-        adminFetch("/api/presswall"),
-      ]);
+      const data = await fetchPresswallClientData();
 
-      if (!(publishersRes.ok && presswallRes.ok)) {
-        setLoadError(true);
-        toast.error("Failed to load Presswall settings");
-        return;
-      }
-
-      const publishersData = await publishersRes.json();
-      const presswallData = await presswallRes.json();
-      const needsOnboardingFlag = Boolean(presswallData.needsOnboarding);
-
-      const loadedConfig = needsOnboardingFlag
-        ? resolveOnboardingDesignConfig(presswallData.config)
-        : presswallData.config;
-      const loadedSelected = selectedFromApi(presswallData.selections);
-
-      setCatalog(publishersData.publishers);
-      setConfig(loadedConfig);
-      setSelected(loadedSelected);
+      setCatalog(data.catalog);
+      setConfig(data.config);
+      setSelected(data.selected);
       setSavedSnapshot({
-        config: loadedConfig,
-        selected: loadedSelected,
+        config: data.config,
+        selected: data.selected,
       });
-      setNeedsOnboarding(needsOnboardingFlag);
+      setNeedsOnboarding(data.needsOnboarding);
     } catch {
       setLoadError(true);
       toast.error("Failed to load Presswall settings");

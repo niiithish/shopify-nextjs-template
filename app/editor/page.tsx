@@ -1,5 +1,5 @@
-import { AdminDashboard } from "@/components/presswall/admin-dashboard";
 import { BrandLogo } from "@/components/presswall/brand-logo";
+import { EditorView } from "@/components/presswall/editor-view";
 import {
   Empty,
   EmptyDescription,
@@ -17,12 +17,13 @@ interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-interface AppEmptyStateProps {
+function AppEmptyState({
+  description,
+  title,
+}: {
   description: string;
   title: string;
-}
-
-function AppEmptyState({ title, description }: AppEmptyStateProps) {
+}) {
   return (
     <div className="flex min-h-svh items-center justify-center p-6">
       <Empty className="max-w-md border">
@@ -38,13 +39,13 @@ function AppEmptyState({ title, description }: AppEmptyStateProps) {
   );
 }
 
-export default async function Page({ searchParams }: PageProps) {
+export default async function EditorPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   if (!hasEmbeddedEntryParams(params)) {
     return (
       <AppEmptyState
-        description="Install and open Presswall from your Shopify admin to configure your press logos."
+        description="Install and open Presswall from your Shopify admin to edit your press logos."
         title="Open from Shopify admin"
       />
     );
@@ -53,5 +54,5 @@ export default async function Page({ searchParams }: PageProps) {
   await authenticatePage(searchParams);
   await ensurePublisherCatalogSeeded();
 
-  return <AdminDashboard />;
+  return <EditorView />;
 }
