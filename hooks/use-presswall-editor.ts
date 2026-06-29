@@ -14,6 +14,7 @@ import {
   applyPresswallTemplate,
   findMatchingPresswallTemplateId,
   type PresswallTemplateId,
+  presswallConfigsEqual,
   resolveOnboardingDesignConfig,
 } from "@/lib/presswall-templates";
 import type {
@@ -31,6 +32,8 @@ export interface PresswallEditor {
   category: string;
   completeOnboarding: () => Promise<boolean>;
   config: PresswallConfig;
+  discard: () => void;
+  isDirty: boolean;
   isLoading: boolean;
   isSaving: boolean;
   loadError: boolean;
@@ -66,6 +69,10 @@ export function usePresswallEditor(): PresswallEditor {
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(true);
+  const [savedSnapshot, setSavedSnapshot] = useState<{
+    config: PresswallConfig;
+    selected: SelectedPublisher[];
+  } | null>(null);
 
   const matchedTemplateId = useMemo(
     () => findMatchingPresswallTemplateId(config),
@@ -92,13 +99,18 @@ export function usePresswallEditor(): PresswallEditor {
       const presswallData = await presswallRes.json();
       const needsOnboardingFlag = Boolean(presswallData.needsOnboarding);
 
+      const loadedConfig = needsOnboardingFlag
+        ? resolveOnboardingDesignConfig(presswallData.config)
+        : presswallData.config;
+      const loadedSelected = selectedFromApi(presswallData.selections);
+
       setCatalog(publishersData.publishers);
-      setConfig(
-        needsOnboardingFlag
-          ? resolveOnboardingDesignConfig(presswallData.config)
-          : presswallData.config
-      );
-      setSelected(selectedFromApi(presswallData.selections));
+      setConfig(loadedConfig);
+      setSelected(loadedSelected);
+      setSavedSnapshot({
+        config: loadedConfig,
+        selected: loadedSelected,
+      });
       setNeedsOnboarding(needsOnboardingFlag);
     } catch {
       setLoadError(true);
@@ -135,6 +147,21 @@ export function usePresswallEditor(): PresswallEditor {
     () => countUnavailableSelections(selected, catalogById),
     [selected, catalogById]
   );
+
+  const isDirty = useMemo(() => {
+    if (!savedSnapshot) {
+      return false;
+    }
+
+    if (!presswallConfigsEqual(config, savedSnapshot.config)) {
+      return true;
+    }
+
+    return (
+      JSON.stringify(buildSelections(selected)) !==
+      JSON.stringify(buildSelections(savedSnapshot.selected))
+    );
+  }, [config, savedSnapshot, selected]);
 
   const togglePublisher = useCallback((publisher: PublisherCatalogItem) => {
     setSelected((current) => {
@@ -184,6 +211,11 @@ export function usePresswallEditor(): PresswallEditor {
           setNeedsOnboarding(false);
         }
 
+        setSavedSnapshot({
+          config,
+          selected: selected.map((item) => ({ ...item })),
+        });
+
         return true;
       } catch {
         toast.error("Could not save Presswall settings");
@@ -192,7 +224,7 @@ export function usePresswallEditor(): PresswallEditor {
         setIsSaving(false);
       }
     },
-    [config, selections]
+    [config, selections, selected]
   );
 
   const save = useCallback(async () => {
@@ -201,6 +233,16 @@ export function usePresswallEditor(): PresswallEditor {
       toast.success("Presswall saved");
     }
   }, [savePresswall]);
+
+  const discard = useCallback(() => {
+    if (!savedSnapshot) {
+      return;
+    }
+
+    setConfig(savedSnapshot.config);
+    setSelected(savedSnapshot.selected.map((item) => ({ ...item })));
+    toast.success("Changes discarded");
+  }, [savedSnapshot]);
 
   const completeOnboarding = useCallback(
     () => savePresswall({ completeOnboarding: true }),
@@ -231,6 +273,8 @@ export function usePresswallEditor(): PresswallEditor {
     category,
     completeOnboarding,
     config,
+    discard,
+    isDirty,
     isLoading,
     isSaving,
     loadError,

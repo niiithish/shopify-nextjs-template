@@ -1,6 +1,7 @@
 "use client";
 
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,7 @@ interface OnboardingActionsProps {
   nextLoading?: boolean;
   onBack?: () => void;
   onNext: () => void;
+  secondaryAction?: ReactNode;
   showBack?: boolean;
 }
 
@@ -25,6 +27,7 @@ export function OnboardingActions({
   nextDisabled = false,
   nextLoading = false,
   compact = false,
+  secondaryAction,
   className,
 }: OnboardingActionsProps) {
   const buttonSize = compact ? "sm" : "lg";
@@ -47,15 +50,18 @@ export function OnboardingActions({
         <span aria-hidden />
       )}
 
-      <Button
-        className={nextClassName}
-        disabled={nextDisabled || nextLoading}
-        onClick={onNext}
-        size={buttonSize}
-      >
-        {nextLoading ? "Saving..." : nextLabel}
-        {nextLoading ? null : <IconArrowRight stroke={2} />}
-      </Button>
+      <div className="flex items-center gap-2">
+        {secondaryAction}
+        <Button
+          className={nextClassName}
+          disabled={nextDisabled || nextLoading}
+          onClick={onNext}
+          size={buttonSize}
+        >
+          {nextLoading ? "Saving..." : nextLabel}
+          {nextLoading ? null : <IconArrowRight stroke={2} />}
+        </Button>
+      </div>
     </div>
   );
 }

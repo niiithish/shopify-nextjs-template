@@ -110,16 +110,26 @@ export function EditorWorkspace({ editor }: EditorWorkspaceProps) {
             </TabsContent>
           </Tabs>
 
-          <div className="shrink-0 border-t p-3">
+          <div className="flex shrink-0 gap-2 border-t p-3">
             <Button
-              className="w-full"
-              disabled={editor.isLoading || editor.isSaving}
+              className="flex-1"
+              disabled={!editor.isDirty || editor.isLoading || editor.isSaving}
+              onClick={editor.discard}
+              type="button"
+              variant="outline"
+            >
+              Discard
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={!editor.isDirty || editor.isLoading || editor.isSaving}
               onClick={() => {
                 editor.save().catch(() => undefined);
               }}
+              type="button"
             >
               <IconDeviceFloppy stroke={2} />
-              {editor.isSaving ? "Saving..." : "Save changes"}
+              {editor.isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>

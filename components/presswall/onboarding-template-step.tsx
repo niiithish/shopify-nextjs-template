@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { IconBookmark } from "@tabler/icons-react";
+import { type ReactNode, useMemo, useState } from "react";
 import { DeviceToggle } from "@/components/presswall/device-toggle";
 import { OnboardingActions } from "@/components/presswall/onboarding-actions";
 import { OnboardingPreviewCanvas } from "@/components/presswall/onboarding-preview-canvas";
 import { OnboardingTemplateCustomControls } from "@/components/presswall/onboarding-template-custom-controls";
+import { SaveTemplateDialog } from "@/components/presswall/save-template-dialog";
 import { TemplatePicker } from "@/components/presswall/template-picker";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PresswallEditor } from "@/hooks/use-presswall-editor";
 import type { PresswallViewport } from "@/lib/presswall-layout-style";
-import { getPresswallTemplate } from "@/lib/presswall-templates";
+import {
+  getPresswallTemplate,
+  presswallConfigsEqual,
+} from "@/lib/presswall-templates";
+import type { PresswallConfig } from "@/lib/presswall-types";
 
 interface OnboardingTemplateStepProps {
   editor: PresswallEditor;
@@ -26,6 +33,50 @@ export function OnboardingTemplateStep({
     "templates"
   );
   const [deviceMode, setDeviceMode] = useState<PresswallViewport>("desktop");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [lastSavedConfig, setLastSavedConfig] =
+    useState<PresswallConfig | null>(null);
+  const [savedTemplateName, setSavedTemplateName] = useState<string | null>(
+    null
+  );
+
+  const isCustomDesign = editor.matchedTemplateId === null;
+  const showSaveTemplate = useMemo(() => {
+    if (!isCustomDesign) {
+      return false;
+    }
+
+    return (
+      lastSavedConfig === null ||
+      !presswallConfigsEqual(editor.config, lastSavedConfig)
+    );
+  }, [editor.config, isCustomDesign, lastSavedConfig]);
+
+  const handleTemplateSaved = (name: string) => {
+    setLastSavedConfig(editor.config);
+    setSavedTemplateName(name);
+  };
+
+  let saveTemplateAction: ReactNode = null;
+  if (showSaveTemplate) {
+    saveTemplateAction = (
+      <Button
+        onClick={() => setSaveDialogOpen(true)}
+        size="sm"
+        type="button"
+        variant="secondary"
+      >
+        <IconBookmark stroke={2} />
+        Save template
+      </Button>
+    );
+  } else if (savedTemplateName) {
+    saveTemplateAction = (
+      <p className="text-muted-foreground text-xs">
+        Saved as {savedTemplateName}
+      </p>
+    );
+  }
 
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-3">
@@ -102,7 +153,15 @@ export function OnboardingTemplateStep({
         nextLabel="Next"
         onBack={onBack}
         onNext={onNext}
+        secondaryAction={saveTemplateAction}
         showBack
+      />
+
+      <SaveTemplateDialog
+        config={editor.config}
+        onOpenChange={setSaveDialogOpen}
+        onSaved={handleTemplateSaved}
+        open={saveDialogOpen}
       />
     </div>
   );

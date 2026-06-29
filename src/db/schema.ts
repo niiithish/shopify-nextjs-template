@@ -57,6 +57,22 @@ export const shopConfigs = sqliteTable("shop_configs", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const shopCustomTemplates = sqliteTable(
+  "shop_custom_templates",
+  {
+    id: text("id").primaryKey(),
+    shop: text("shop").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    configJson: text("config_json").notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => ({
+    shopIdx: index("shop_custom_templates_shop_idx").on(table.shop),
+  })
+);
+
 export const shopPublishers = sqliteTable(
   "shop_publishers",
   {

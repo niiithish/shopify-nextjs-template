@@ -9,6 +9,17 @@ const MIGRATIONS = [
   "ALTER TABLE shop_configs ADD COLUMN logo_alignment text DEFAULT 'center' NOT NULL",
   "UPDATE shop_configs SET logo_alignment = alignment",
   "CREATE INDEX IF NOT EXISTS shop_publishers_shop_idx ON shop_publishers (shop)",
+  "DROP TABLE IF EXISTS shop_templates",
+  `CREATE TABLE IF NOT EXISTS shop_custom_templates (
+    id text PRIMARY KEY NOT NULL,
+    shop text NOT NULL,
+    name text NOT NULL,
+    description text,
+    config_json text NOT NULL,
+    created_at text NOT NULL,
+    updated_at text NOT NULL
+  )`,
+  "CREATE INDEX IF NOT EXISTS shop_custom_templates_shop_idx ON shop_custom_templates (shop)",
 ];
 
 function isIgnorableMigrationError(error: unknown): boolean {
