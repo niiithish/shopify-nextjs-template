@@ -12,14 +12,13 @@ export interface PresswallNavPaths {
 export interface PresswallAppNavLinkSpec {
   href: string;
   label: string;
-  rel?: "home";
 }
 
 export function getPresswallAppNavLinks(
   paths: PresswallNavPaths
 ): PresswallAppNavLinkSpec[] {
   return [
-    { href: paths.home, label: "Home", rel: "home" },
+    { href: paths.home, label: "Home" },
     { href: paths.editor, label: "Editor" },
   ];
 }
@@ -43,22 +42,27 @@ export function assertPresswallAppNavContract(
   }
 
   const links = [...host.querySelectorAll("s-app-nav a[href]")];
-  if (links.length < 2) {
-    throw new Error("Expected at least Home + Editor links");
+  if (links.length !== 2) {
+    throw new Error("Expected exactly Home + Editor sidebar links");
   }
 
-  const homeLinks = links.filter((link) => link.getAttribute("rel") === "home");
-  if (homeLinks.length !== 1) {
-    throw new Error('Expected exactly one <a rel="home">');
+  const homeLink = links.find((link) => link.textContent?.trim() === "Home");
+  if (!homeLink) {
+    throw new Error("Expected visible Home sub-page link");
   }
 
-  const homeLink = homeLinks[0];
   if (homeLink.getAttribute("href") !== paths.home) {
     throw new Error(`Home href mismatch: ${homeLink.getAttribute("href")}`);
   }
 
+  if (homeLink.getAttribute("rel") === "home") {
+    throw new Error(
+      "Home must be a visible sidebar item — do not set rel=home"
+    );
+  }
+
   const editorLink = links.find(
-    (link) => link.getAttribute("rel") !== "home" && link.textContent?.trim()
+    (link) => link.textContent?.trim() === "Editor"
   );
   if (!editorLink) {
     throw new Error("Expected visible Editor sub-page link");
@@ -66,10 +70,6 @@ export function assertPresswallAppNavContract(
 
   if (editorLink.getAttribute("href") !== paths.editor) {
     throw new Error(`Editor href mismatch: ${editorLink.getAttribute("href")}`);
-  }
-
-  if (editorLink.textContent?.trim() !== "Editor") {
-    throw new Error("Editor link label must be 'Editor'");
   }
 
   for (const link of links) {

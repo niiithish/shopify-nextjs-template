@@ -126,19 +126,10 @@ describe("onboarding completion handoff", () => {
 
     await waitFor(() => {
       expect(savedSelections).toEqual([{ publisherId: "forbes", position: 0 }]);
-      expect(view.getByText("Quick actions")).toBeTruthy();
-      expect(view.getByText("Configured")).toBeTruthy();
-      expect(view.getByText("Classic")).toBeTruthy();
-      expect(view.getByText("Publishers on your strip")).toBeTruthy();
-      expect(
-        view.getByText("Outlets").closest("[data-slot=card]")
-      ).toBeTruthy();
-      expect(
-        view
-          .getByText("Outlets")
-          .closest("[data-slot=card]")
-          ?.querySelector("[data-slot=card-title]")?.textContent
-      ).toBe("1");
+      expect(view.getByText("Storefront preview")).toBeTruthy();
+      expect(view.getByText("Storefront embed")).toBeTruthy();
+      expect(view.getByText("Add to your theme")).toBeTruthy();
+      expect(view.getByRole("button", { name: "Open editor" })).toBeTruthy();
       expect(view.queryByText("Step 1 of 3 — Add your press logos")).toBeNull();
       expect(view.queryByText("Discard")).toBeNull();
     });

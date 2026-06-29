@@ -1,18 +1,18 @@
 "use client";
 
 import {
-  IconArrowRight,
+  IconCircleCheck,
   IconEdit,
-  IconLayoutGrid,
-  IconNews,
-  IconPalette,
+  IconExternalLink,
+  IconLoader2,
+  IconRefresh,
 } from "@tabler/icons-react";
-import type { ReactNode } from "react";
-import { useContext } from "react";
-import { OnboardingPreview } from "@/components/presswall/onboarding-preview";
+import { useContext, useState } from "react";
+import { DeviceToggle } from "@/components/presswall/device-toggle";
+import { OnboardingPreviewCanvas } from "@/components/presswall/onboarding-preview-canvas";
 import { ThemeActivationBanner } from "@/components/presswall/theme-activation-banner";
 import { ThemeActivationContext } from "@/components/presswall/theme-activation-provider";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,273 +23,268 @@ import {
 } from "@/components/ui/card";
 import { buildAdminPath } from "@/lib/admin-path";
 import type { MerchantOverviewData } from "@/lib/merchant-overview-data";
-import { getPresswallDesignLabel } from "@/lib/presswall-templates";
-
-const LAYOUT_LABELS = {
-  bar: "Horizontal bar",
-  grid: "Grid",
-  marquee: "Marquee",
-} as const;
+import type { PresswallViewport } from "@/lib/presswall-layout-style";
 
 interface MerchantOverviewProps {
   data: MerchantOverviewData;
 }
 
-export function MerchantOverview({ data }: MerchantOverviewProps) {
-  const themeActivation = useContext(ThemeActivationContext);
-  const themeStatus = themeActivation?.status ?? null;
+const PLACEMENT_STEPS = [
+  "Enable the app embed so your strip can load on the storefront.",
+  "Add the Presswall block to high-trust templates like your homepage or product page.",
+  "Save the theme, then preview your store to confirm placement.",
+] as const;
 
-  const customOutletCount = data.selected.filter(
-    (item) => !item.publisherId
-  ).length;
-  const catalogOutletCount = data.selected.length - customOutletCount;
-  const designLabel = getPresswallDesignLabel(data.config);
-  const layoutLabel = LAYOUT_LABELS[data.config.layout];
-  const themeIsActive = themeStatus?.isActive ?? null;
-  const storefrontDescription = (() => {
-    if (themeIsActive === null) {
-      return "Checking theme status";
-    }
+function buildHomepageSectionUrl(activateSectionUrl: string): string {
+  const url = new URL(activateSectionUrl);
+  url.searchParams.set("template", "index");
+  return url.toString();
+}
 
-    if (themeIsActive) {
-      return "App embed is enabled";
-    }
+function openThemeEditor(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
 
-    return "Enable the app embed";
-  })();
-  const storefrontValue = (() => {
-    if (themeIsActive === null) {
-      return "…";
-    }
+function EmbedStatusBadge({
+  isActive,
+  isChecking,
+}: {
+  isActive: boolean;
+  isChecking: boolean;
+}) {
+  if (isChecking) {
+    return (
+      <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+        <IconLoader2 className="size-3 animate-spin" stroke={2} />
+        Checking
+      </span>
+    );
+  }
 
-    if (themeIsActive) {
-      return "Live";
-    }
-
-    return "Inactive";
-  })();
+  if (isActive) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-700 text-xs">
+        <IconCircleCheck className="size-3" stroke={2.5} />
+        Enabled
+      </span>
+    );
+  }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-        <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-semibold text-2xl tracking-tight">Presswall</h1>
-            <Badge variant={data.selected.length > 0 ? "default" : "secondary"}>
-              {data.selected.length > 0 ? "Configured" : "No outlets yet"}
-            </Badge>
-          </div>
-          <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed">
-            Your &ldquo;as seen on&rdquo; press strip is saved. Review how it
-            looks below, then open the editor when you want to change outlets or
-            styling.
-          </p>
-        </header>
-
-        <ThemeActivationBanner />
-
-        {data.unavailableCount > 0 ? (
-          <Card className="border-amber-200/80 bg-amber-50/50">
-            <CardHeader>
-              <CardTitle className="text-amber-950">
-                Some outlets need attention
-              </CardTitle>
-              <CardDescription className="text-amber-900/80">
-                {data.unavailableCount} selected outlet
-                {data.unavailableCount === 1 ? "" : "s"} are no longer available
-                and will not appear on your storefront.
-              </CardDescription>
-            </CardHeader>
-            <CardFooterAction
-              href={buildAdminPath("/editor")}
-              label="Fix in editor"
-            />
-          </Card>
-        ) : null}
-
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard
-            description={
-              customOutletCount > 0
-                ? `${catalogOutletCount} catalog, ${customOutletCount} custom`
-                : "Publishers on your strip"
-            }
-            icon={<IconNews className="size-4" stroke={2} />}
-            title="Outlets"
-            value={String(data.selected.length)}
-          />
-          <SummaryCard
-            description="Active design preset"
-            icon={<IconPalette className="size-4" stroke={2} />}
-            title="Template"
-            value={designLabel}
-          />
-          <SummaryCard
-            description="How logos are arranged"
-            icon={<IconLayoutGrid className="size-4" stroke={2} />}
-            title="Layout"
-            value={layoutLabel}
-          />
-          <SummaryCard
-            description={storefrontDescription}
-            icon={<IconLayoutGrid className="size-4" stroke={2} />}
-            title="Storefront"
-            value={storefrontValue}
-            valueTone={themeIsActive ? "success" : "warning"}
-          />
-        </section>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Storefront preview</CardTitle>
-            <CardDescription>
-              Read-only snapshot of your current press strip. Open the editor to
-              make changes.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-hidden rounded-lg border bg-muted/30 p-4">
-              <OnboardingPreview
-                catalog={data.catalog}
-                config={data.config}
-                deviceMode="desktop"
-                scale="lg"
-                selections={data.selections}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <section className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick actions</CardTitle>
-              <CardDescription>
-                Jump straight to the task you need most.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Button
-                className="justify-between"
-                onClick={() => {
-                  window.location.assign(buildAdminPath("/editor"));
-                }}
-                type="button"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <IconEdit stroke={2} />
-                  Edit press wall
-                </span>
-                <IconArrowRight className="size-4" stroke={2} />
-              </Button>
-              {themeStatus && !themeStatus.isActive ? (
-                <Button
-                  onClick={() => {
-                    window.open(
-                      themeStatus.activateEmbedUrl,
-                      "_blank",
-                      "noopener,noreferrer"
-                    );
-                  }}
-                  type="button"
-                  variant="outline"
-                >
-                  Activate on storefront
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Tips</CardTitle>
-              <CardDescription>Get more from Presswall.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-muted-foreground text-sm leading-relaxed">
-                <li>
-                  Use the Editor to swap outlets, try templates, or fine-tune
-                  colors and spacing.
-                </li>
-                <li>
-                  Add the Presswall block to high-trust pages like your homepage
-                  or product detail templates.
-                </li>
-                <li>
-                  Keep 4–8 recognizable outlets for a clean strip that builds
-                  credibility without clutter.
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-    </div>
+    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-amber-800 text-xs">
+      Not enabled
+    </span>
   );
 }
 
-interface SummaryCardProps {
-  description: string;
-  icon: ReactNode;
-  title: string;
-  value: string;
-  valueTone?: "default" | "success" | "warning";
-}
+function StorefrontEmbedCard() {
+  const activation = useContext(ThemeActivationContext);
+  const [isChecking, setIsChecking] = useState(false);
 
-function SummaryCard({
-  description,
-  icon,
-  title,
-  value,
-  valueTone = "default",
-}: SummaryCardProps) {
+  const status = activation?.status ?? null;
+  const isLoading = activation?.isLoading ?? true;
+  const isActive = status?.isActive ?? false;
+
+  const handleCheckStatus = () => {
+    if (!activation) {
+      return;
+    }
+
+    setIsChecking(true);
+    activation.reload().finally(() => {
+      setIsChecking(false);
+    });
+  };
+
   return (
-    <Card size="sm">
-      <CardHeader className="pb-0">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          {icon}
-          <CardDescription className="text-[0.7rem] uppercase tracking-wide">
-            {title}
-          </CardDescription>
+    <Card className="shadow-sm">
+      <CardHeader className="gap-2 border-b pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <CardTitle className="text-sm">Storefront embed</CardTitle>
+            <CardDescription className="text-xs leading-relaxed">
+              Required for your press strip to appear on the live store.
+            </CardDescription>
+          </div>
+          <EmbedStatusBadge
+            isActive={isActive}
+            isChecking={isLoading || isChecking}
+          />
         </div>
-        <CardTitle className={getSummaryValueClass(valueTone)}>
-          {value}
-        </CardTitle>
       </CardHeader>
-      <CardContent className="pt-1 text-muted-foreground text-xs">
-        {description}
+      <CardContent className="space-y-3 pt-4">
+        {status?.themeName ? (
+          <p className="text-muted-foreground text-xs">
+            Theme: <span className="text-foreground">{status.themeName}</span>
+          </p>
+        ) : null}
+
+        {isActive ? (
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Presswall is enabled on your storefront. You can still open the
+            theme editor to review embed settings.
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Turn on the Presswall app embed in your theme editor, save, then
+            check status here.
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={!status?.activateEmbedUrl || isLoading}
+            onClick={() => {
+              if (status?.activateEmbedUrl) {
+                openThemeEditor(status.activateEmbedUrl);
+              }
+            }}
+            size="sm"
+            type="button"
+          >
+            <IconExternalLink stroke={2} />
+            {isActive ? "Open theme editor" : "Enable app embed"}
+          </Button>
+          <Button
+            disabled={isLoading || isChecking}
+            onClick={handleCheckStatus}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {isChecking ? (
+              <IconLoader2 className="size-4 animate-spin" stroke={2} />
+            ) : (
+              <IconRefresh stroke={2} />
+            )}
+            Check status
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function getSummaryValueClass(
-  valueTone: SummaryCardProps["valueTone"]
-): string | undefined {
-  if (valueTone === "success") {
-    return "text-emerald-700";
-  }
+function ThemePlacementCard() {
+  const activation = useContext(ThemeActivationContext);
+  const status = activation?.status ?? null;
+  const homepageUrl = status?.activateSectionUrl
+    ? buildHomepageSectionUrl(status.activateSectionUrl)
+    : null;
 
-  if (valueTone === "warning") {
-    return "text-amber-700";
-  }
+  return (
+    <Card className="shadow-sm">
+      <CardHeader className="gap-2 border-b pb-3">
+        <CardTitle className="text-sm">Add to your theme</CardTitle>
+        <CardDescription className="text-xs leading-relaxed">
+          Place the Presswall block where shoppers will see it.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-4">
+        <ol className="space-y-2">
+          {PLACEMENT_STEPS.map((step, index) => (
+            <li
+              className="flex items-start gap-2 text-muted-foreground text-xs leading-relaxed"
+              key={step}
+            >
+              <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full border bg-background font-medium text-[0.625rem] tabular-nums">
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
 
-  return;
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={!homepageUrl}
+            onClick={() => {
+              if (homepageUrl) {
+                openThemeEditor(homepageUrl);
+              }
+            }}
+            size="sm"
+            type="button"
+          >
+            <IconExternalLink stroke={2} />
+            Add to homepage
+          </Button>
+          <Button
+            disabled={!status?.activateSectionUrl}
+            onClick={() => {
+              if (status?.activateSectionUrl) {
+                openThemeEditor(status.activateSectionUrl);
+              }
+            }}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <IconExternalLink stroke={2} />
+            Add to product page
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function CardFooterAction({ href, label }: { href: string; label: string }) {
+export function MerchantOverview({ data }: MerchantOverviewProps) {
+  const [deviceMode, setDeviceMode] = useState<PresswallViewport>("desktop");
+
   return (
-    <div className="px-4 pb-4">
-      <Button
-        onClick={() => {
-          window.location.assign(href);
-        }}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        {label}
-      </Button>
+    <div className="flex h-svh flex-col overflow-hidden bg-background">
+      <ThemeActivationBanner variant="compact" />
+
+      {data.unavailableCount > 0 ? (
+        <Alert className="shrink-0 rounded-none border-x-0 border-t-0 py-2">
+          <AlertTitle className="text-sm">
+            Some outlets are no longer available
+          </AlertTitle>
+          <AlertDescription className="text-xs">
+            {data.unavailableCount} selected outlet
+            {data.unavailableCount === 1 ? "" : "s"} will not show on your
+            storefront. Open the editor to update your strip.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 pb-6 sm:px-6">
+        <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-2.5">
+              <p className="font-medium text-sm">Storefront preview</p>
+              <div className="flex items-center gap-2">
+                <DeviceToggle mode={deviceMode} onChange={setDeviceMode} />
+                <Button
+                  onClick={() => {
+                    window.location.assign(buildAdminPath("/editor"));
+                  }}
+                  size="sm"
+                  type="button"
+                >
+                  <IconEdit stroke={2} />
+                  Open editor
+                </Button>
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1">
+              <OnboardingPreviewCanvas
+                catalog={data.catalog}
+                config={data.config}
+                deviceMode={deviceMode}
+                selections={data.selections}
+              />
+            </div>
+          </div>
+
+          <div className="grid shrink-0 gap-3 md:grid-cols-2">
+            <StorefrontEmbedCard />
+            <ThemePlacementCard />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

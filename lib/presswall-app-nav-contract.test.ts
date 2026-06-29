@@ -5,14 +5,14 @@ import {
 } from "@/lib/presswall-app-nav-contract";
 
 describe("presswall app nav contract", () => {
-  test("declares Home override plus Editor sub-page per Shopify app-nav docs", () => {
+  test("declares Home and Editor as visible sidebar sub-pages", () => {
     const paths = {
       home: "/",
       editor: "/editor",
     };
 
     expect(getPresswallAppNavLinks(paths)).toEqual([
-      { href: paths.home, label: "Home", rel: "home" },
+      { href: paths.home, label: "Home" },
       { href: paths.editor, label: "Editor" },
     ]);
   });
@@ -22,7 +22,7 @@ describe("presswall app nav contract", () => {
     document.body.innerHTML = `
       <div aria-hidden="true" class="presswall-app-nav-host">
         <s-app-nav>
-          <a href="/" rel="home">Home</a>
+          <a href="/">Home</a>
           <a href="/editor">Editor</a>
         </s-app-nav>
       </div>

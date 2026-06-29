@@ -16,8 +16,8 @@ describe("AdminDashboard render routing", () => {
       />
     );
 
-    expect(view.getByText("Quick actions")).toBeTruthy();
     expect(view.getByText("Storefront preview")).toBeTruthy();
+    expect(view.getByRole("button", { name: "Open editor" })).toBeTruthy();
     expect(view.queryByText("Discard")).toBeNull();
   });
 

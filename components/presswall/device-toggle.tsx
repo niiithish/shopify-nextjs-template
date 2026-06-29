@@ -13,26 +13,26 @@ export function DeviceToggle({ mode, onChange }: DeviceToggleProps) {
   return (
     <fieldset className="inline-flex rounded-lg border bg-background p-0.5">
       <Button
+        aria-label="Desktop preview"
         aria-pressed={mode === "desktop"}
-        className="h-7 gap-1.5 px-2.5 text-xs"
+        className="size-7 px-0"
         onClick={() => onChange("desktop")}
         size="sm"
         type="button"
         variant={mode === "desktop" ? "secondary" : "ghost"}
       >
         <IconDeviceDesktop className="size-3.5" stroke={2} />
-        Desktop
       </Button>
       <Button
+        aria-label="Mobile preview"
         aria-pressed={mode === "mobile"}
-        className="h-7 gap-1.5 px-2.5 text-xs"
+        className="size-7 px-0"
         onClick={() => onChange("mobile")}
         size="sm"
         type="button"
         variant={mode === "mobile" ? "secondary" : "ghost"}
       >
         <IconDeviceMobile className="size-3.5" stroke={2} />
-        Mobile
       </Button>
     </fieldset>
   );

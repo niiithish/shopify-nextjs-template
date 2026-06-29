@@ -53,9 +53,7 @@ export function AdminDashboardView({ editor }: { editor: PresswallEditor }) {
 
   return (
     <ThemeActivationProvider>
-      <div className="flex h-svh flex-col overflow-hidden bg-background">
-        <MerchantOverview data={merchantOverviewFromEditor(editor)} />
-      </div>
+      <MerchantOverview data={merchantOverviewFromEditor(editor)} />
     </ThemeActivationProvider>
   );
 }
