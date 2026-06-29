@@ -25,7 +25,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { PresswallConfig } from "@/lib/presswall-types";
+import type {
+  PresswallAlignment,
+  PresswallConfig,
+} from "@/lib/presswall-types";
 import { cn } from "@/lib/utils";
 
 function sliderValue(value: number | readonly number[]): number {
@@ -36,7 +39,7 @@ function sliderValue(value: number | readonly number[]): number {
 }
 
 const ALIGNMENT_OPTIONS: {
-  value: PresswallConfig["alignment"];
+  value: PresswallAlignment;
   icon: Icon;
   label: string;
 }[] = [
@@ -51,6 +54,43 @@ interface StyleControlsProps {
     key: K,
     value: PresswallConfig[K]
   ) => void;
+}
+
+function AlignmentPicker({
+  onChange,
+  value,
+}: {
+  onChange: (value: PresswallAlignment) => void;
+  value: PresswallAlignment;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      {ALIGNMENT_OPTIONS.map((option) => {
+        const AlignIcon = option.icon;
+        const isSelected = value === option.value;
+
+        return (
+          <button
+            aria-pressed={isSelected}
+            className={cn(
+              "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2.5 text-center transition-colors",
+              isSelected
+                ? "border-ring bg-muted text-foreground"
+                : "border-border bg-background text-foreground hover:bg-muted/50"
+            )}
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            type="button"
+          >
+            <AlignIcon className="size-3.5 shrink-0" stroke={2} />
+            <span className="w-full truncate text-[0.625rem] leading-none">
+              {option.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function StyleControls({ config, onUpdate }: StyleControlsProps) {
@@ -115,6 +155,14 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
                 value={[config.headingSpacing]}
               />
             </div>
+
+            <div className="grid gap-2">
+              <Label>Heading alignment</Label>
+              <AlignmentPicker
+                onChange={(value) => onUpdate("headingAlignment", value)}
+                value={config.headingAlignment}
+              />
+            </div>
           </>
         ) : null}
 
@@ -161,6 +209,11 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
             </Tooltip>
           </div>
           <Select
+            items={[
+              { value: "mono", label: "Black & white" },
+              { value: "muted", label: "Muted grayscale" },
+              { value: "color", label: "Full color" },
+            ]}
             onValueChange={(value) =>
               onUpdate("colorMode", value as PresswallConfig["colorMode"])
             }
@@ -210,6 +263,11 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
         <div className="grid gap-2">
           <Label>Layout type</Label>
           <Select
+            items={[
+              { value: "bar", label: "Horizontal bar" },
+              { value: "grid", label: "Grid" },
+              { value: "marquee", label: "Scrolling marquee" },
+            ]}
             onValueChange={(value) =>
               onUpdate("layout", value as PresswallConfig["layout"])
             }
@@ -258,33 +316,11 @@ export function StyleControls({ config, onUpdate }: StyleControlsProps) {
         ) : null}
 
         <div className="grid gap-2">
-          <Label>Alignment</Label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {ALIGNMENT_OPTIONS.map((option) => {
-              const AlignIcon = option.icon;
-              const isSelected = config.alignment === option.value;
-
-              return (
-                <button
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-2.5 text-center transition-colors",
-                    isSelected
-                      ? "border-ring bg-muted text-foreground"
-                      : "border-border bg-background text-foreground hover:bg-muted/50"
-                  )}
-                  key={option.value}
-                  onClick={() => onUpdate("alignment", option.value)}
-                  type="button"
-                >
-                  <AlignIcon className="size-3.5 shrink-0" stroke={2} />
-                  <span className="w-full truncate text-[0.625rem] leading-none">
-                    {option.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <Label>Logo alignment</Label>
+          <AlignmentPicker
+            onChange={(value) => onUpdate("logoAlignment", value)}
+            value={config.logoAlignment}
+          />
         </div>
 
         <div className="grid gap-2">

@@ -24,7 +24,7 @@ const INLINE_RGB_COLOR_PATTERN =
     fetch(proxyUrl)
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to load Presswall config");
+          throw new Error("Load failed");
         }
         return response.json();
       })
@@ -33,13 +33,13 @@ const INLINE_RGB_COLOR_PATTERN =
       })
       .catch(() => {
         root.innerHTML =
-          '<div class="presswall-loading">Presswall is not configured yet.</div>';
+          '<div class="presswall-loading">Not configured yet.</div>';
       });
   }
 
   function renderPresswall(config) {
     if (!config.publishers || config.publishers.length === 0) {
-      return '<div class="presswall-loading">Add outlets in the Presswall app.</div>';
+      return '<div class="presswall-loading">Add outlets in Presswall.</div>';
     }
 
     const backgroundColor = sanitizeCssColor(
@@ -61,7 +61,12 @@ const INLINE_RGB_COLOR_PATTERN =
     );
     const logosPerRowMobile = clampInt(config.logosPerRowMobile, 2, 1, 4);
     const marqueeSpeed = sanitizeCssSize(config.marqueeSpeed, 30);
-    const alignment = sanitizeAlignment(config.alignment);
+    const headingAlignment = sanitizeAlignment(
+      config.headingAlignment ?? config.alignment
+    );
+    const logoAlignment = sanitizeAlignment(
+      config.logoAlignment ?? config.headingAlignment ?? config.alignment
+    );
 
     const style = [
       `background:${backgroundColor}`,
@@ -74,8 +79,8 @@ const INLINE_RGB_COLOR_PATTERN =
     ].join(";");
 
     const heading =
-      config.showHeading && config.headingText
-        ? `<p class="presswall-heading presswall-heading-align-${alignment}" style="color:${textColor}">${escapeHtml(config.headingText)}</p>`
+      config.showHeading && config.headingText && config.layout !== "marquee"
+        ? `<p class="presswall-heading presswall-heading-align-${headingAlignment}" style="color:${textColor}">${escapeHtml(config.headingText)}</p>`
         : "";
 
     const logoStyle = getLogoStyle(config);
@@ -84,19 +89,37 @@ const INLINE_RGB_COLOR_PATTERN =
       .join("");
 
     if (config.layout === "marquee") {
-      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-marquee-wrap"><div class="presswall-marquee-track presswall-align-${alignment}" style="animation-duration:${marqueeSpeed}s">${logos}${logos}</div></div></div>`;
+      return renderMarquee(
+        config,
+        style,
+        backgroundColor,
+        textColor,
+        headingFontSize,
+        marqueeSpeed,
+        logos
+      );
     }
 
     if (config.layout === "grid") {
-      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-grid presswall-align-${alignment}" style="--logos-per-row-desktop:${logosPerRowDesktop};--logos-per-row-mobile:${logosPerRowMobile}">${config.publishers
+      return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-grid presswall-align-${logoAlignment}" style="--lpr-d:${logosPerRowDesktop};--lpr-m:${logosPerRowMobile}">${config.publishers
         .map(
           (publisher) =>
-            `<div class="presswall-grid-item">${renderLogo(publisher, config, logoStyle)}</div>`
+            `<div class="pw-gi">${renderLogo(publisher, config, logoStyle)}</div>`
         )
         .join("")}</div></div>`;
     }
 
-    return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-bar presswall-align-${alignment}" style="--logos-per-row-desktop:${logosPerRowDesktop};--logos-per-row-mobile:${logosPerRowMobile}">${logos}</div></div>`;
+    return `<div class="presswall-shell" style="${style}">${heading}<div class="presswall-bar presswall-align-${logoAlignment}" style="--lpr-d:${logosPerRowDesktop};--lpr-m:${logosPerRowMobile}">${logos}</div></div>`;
+  }
+
+  function renderMarquee(c, s, bg, tx, hf, sp, logos) {
+    const n = marqueeSegments(c.publishers.length);
+    const lead =
+      c.showHeading && c.headingText
+        ? `<div class="pw-mq-lead"><p class="pw-mq-label" style="color:${tx};font-size:${hf}px">${escapeHtml(c.headingText)}</p><span class="pw-mq-div"></span></div>`
+        : "";
+    const fade = bg === "transparent" ? "#fff" : bg;
+    return `<div class="presswall-shell" style="${s}"><div class="pw-mq-row">${lead}<div class="pw-mq-scroll" style="--pw-mq-fade:${fade}"><div class="pw-mq-wrap"><div class="pw-mq-track" style="animation-duration:${sp}s;--pw-mq-n:${n}">${logos.repeat(n)}</div></div><span class="pw-mq-fade pw-mq-fade-left" aria-hidden="true"></span><span class="pw-mq-fade pw-mq-fade-right" aria-hidden="true"></span></div></div></div>`;
   }
 
   function renderLogo(publisher, config, logoStyle) {
@@ -115,7 +138,7 @@ const INLINE_RGB_COLOR_PATTERN =
       ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${content}</a>`
       : content;
 
-    return `<div class="presswall-logo presswall-marquee-item" style="height:${height}px;${logoStyle}">${linked}</div>`;
+    return `<div class="presswall-logo" style="height:${height}px;${logoStyle}">${linked}</div>`;
   }
 
   function renderSvgLogo(svg) {
@@ -263,6 +286,14 @@ const INLINE_RGB_COLOR_PATTERN =
     }
 
     return Math.min(max, Math.max(min, Math.round(parsed)));
+  }
+
+  function marqueeSegments(count) {
+    if (!count) {
+      return 2;
+    }
+
+    return Math.max(2, Math.min(8, Math.ceil(18 / count)));
   }
 
   function sanitizeUrl(url) {

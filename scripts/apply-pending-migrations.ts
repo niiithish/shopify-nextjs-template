@@ -6,6 +6,8 @@ const MIGRATIONS = [
   "ALTER TABLE shop_configs ADD COLUMN logos_per_row_mobile integer DEFAULT 2 NOT NULL",
   "ALTER TABLE shop_configs ADD COLUMN heading_font_size integer DEFAULT 12 NOT NULL",
   "ALTER TABLE shop_configs ADD COLUMN heading_spacing integer DEFAULT 20 NOT NULL",
+  "ALTER TABLE shop_configs ADD COLUMN logo_alignment text DEFAULT 'center' NOT NULL",
+  "UPDATE shop_configs SET logo_alignment = alignment",
 ];
 
 function isDuplicateColumnError(error: unknown): boolean {

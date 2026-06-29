@@ -10,9 +10,9 @@ import type { PresswallConfig } from "@/lib/presswall-types";
 
 describe("applyPresswallTemplate", () => {
   test("resets omitted keys instead of carrying them from a prior config", () => {
-    const editorial = getResolvedPresswallTemplateConfig("editorial");
+    const softCard = getResolvedPresswallTemplateConfig("soft-card");
 
-    expect(editorial.grayscaleOpacity).toBe(60);
+    expect(softCard.grayscaleOpacity).toBe(65);
 
     const classic = applyPresswallTemplate("classic");
 
@@ -22,9 +22,17 @@ describe("applyPresswallTemplate", () => {
     expect(findMatchingPresswallTemplateId(classic)).toBe("classic");
   });
 
+  test("preserves explicit marquee spacing overrides", () => {
+    const marquee = getResolvedPresswallTemplateConfig("marquee");
+
+    expect(marquee.logoHeight).toBe(20);
+    expect(marquee.gap).toBe(50);
+    expect(findMatchingPresswallTemplateId(marquee)).toBe("marquee");
+  });
+
   test("matches after switching templates from a customized current state", () => {
     const customized: PresswallConfig = {
-      ...getResolvedPresswallTemplateConfig("grid"),
+      ...getResolvedPresswallTemplateConfig("soft-card"),
       gap: 42,
       headingText: "Press",
       colorMode: "color",

@@ -1,0 +1,1 @@
+ALTER TABLE `shop_configs` ADD `logo_alignment` text DEFAULT 'center' NOT NULL;

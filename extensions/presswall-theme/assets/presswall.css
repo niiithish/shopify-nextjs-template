@@ -43,7 +43,7 @@
 .presswall-bar,
 .presswall-grid {
   display: grid;
-  grid-template-columns: repeat(var(--logos-per-row-mobile, 2), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--lpr-m, 2), minmax(0, 1fr));
   gap: var(--presswall-gap);
   align-items: center;
   width: 100%;
@@ -52,10 +52,7 @@
 @media (min-width: 640px) {
   .presswall-bar,
   .presswall-grid {
-    grid-template-columns: repeat(
-        var(--logos-per-row-desktop, 4),
-        minmax(0, 1fr)
-      );
+    grid-template-columns: repeat(var(--lpr-d, 4), minmax(0, 1fr));
   }
 }
 
@@ -74,7 +71,7 @@
   justify-items: end;
 }
 
-.presswall-grid-item {
+.pw-gi {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,19 +107,78 @@
   max-width: none;
 }
 
-.presswall-marquee-wrap {
+.pw-mq-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.pw-mq-lead {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.875rem;
+  align-items: center;
+  padding-right: 1.25rem;
+}
+
+.pw-mq-label {
+  margin: 0;
+  font-family: var(--font-heading-family, inherit);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.pw-mq-div {
+  display: block;
+  flex-shrink: 0;
+  width: 1px;
+  height: 1.75rem;
+  background: currentcolor;
+  opacity: 0.22;
+}
+
+.pw-mq-scroll {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pw-mq-wrap {
   width: 100%;
   overflow: hidden;
 }
 
-.presswall-marquee-track {
-  display: flex;
-  gap: var(--presswall-gap);
-  width: max-content;
-  animation: presswall-scroll linear infinite;
+.pw-mq-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 2.5rem;
+  pointer-events: none;
 }
 
-.presswall-marquee-item {
+.pw-mq-fade-left {
+  left: 0;
+  background: linear-gradient(to right, var(--pw-mq-fade, #fff), transparent);
+}
+
+.pw-mq-fade-right {
+  right: 0;
+  background: linear-gradient(to left, var(--pw-mq-fade, #fff), transparent);
+}
+
+.pw-mq-track {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: var(--presswall-gap);
+  align-items: center;
+  width: max-content;
+  animation: presswall-scroll linear infinite;
+  will-change: transform;
+}
+
+.pw-mq-track .presswall-logo {
   flex: 0 0 auto;
 }
 
@@ -131,7 +187,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(calc(-100% / var(--pw-mq-n, 2)));
   }
 }
 

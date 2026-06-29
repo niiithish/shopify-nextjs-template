@@ -4,6 +4,7 @@ import type { PresswallConfig } from "@/lib/presswall-types";
 
 interface HeadingMetricsOptions {
   compact?: boolean;
+  compactFontSizeCap?: number;
 }
 
 export function getHeadingMetrics(
@@ -11,7 +12,10 @@ export function getHeadingMetrics(
   options: HeadingMetricsOptions = {}
 ): { fontSize: number; marginBottom: number } {
   if (options.compact) {
-    const fontSize = Math.min(config.headingFontSize, 8);
+    const fontSize = Math.min(
+      config.headingFontSize,
+      options.compactFontSizeCap ?? 8
+    );
 
     return {
       fontSize,

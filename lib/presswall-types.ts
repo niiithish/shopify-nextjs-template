@@ -8,6 +8,7 @@ import {
 export const colorModeSchema = z.enum(["mono", "color", "muted"]);
 export const layoutSchema = z.enum(["bar", "grid", "marquee"]);
 export const alignmentSchema = z.enum(["left", "center", "right"]);
+export type PresswallAlignment = z.infer<typeof alignmentSchema>;
 
 export const presswallConfigSchema = z.object({
   headingText: z.string().min(0).max(80),
@@ -20,7 +21,8 @@ export const presswallConfigSchema = z.object({
   logosPerRowDesktop: z.number().int().min(2).max(8),
   logosPerRowMobile: z.number().int().min(1).max(4),
   gap: z.number().int().min(8).max(64),
-  alignment: alignmentSchema,
+  headingAlignment: alignmentSchema,
+  logoAlignment: alignmentSchema,
   backgroundColor: cssColorSchema,
   textColor: cssColorSchema,
   borderRadius: z.number().int().min(0).max(32),

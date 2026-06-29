@@ -2,6 +2,10 @@
 
 import { IconEye } from "@tabler/icons-react";
 import { useState } from "react";
+import {
+  MarqueeLayout,
+  MarqueeTrack,
+} from "@/components/presswall/marquee-layout";
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +24,10 @@ import {
   getLogoImageStyle,
   getLogoSlotStyle,
 } from "@/lib/presswall-logo-style";
+import {
+  getMarqueeRepeatCount,
+  getMarqueeTrackStyle,
+} from "@/lib/presswall-marquee";
 import { getPreviewColors } from "@/lib/presswall-preview-colors";
 import type {
   PresswallConfig,
@@ -45,13 +53,17 @@ const headingAlignmentClass = {
 } as const;
 
 function LayoutContent({
+  backgroundColor,
   config,
   items,
   renderLogo,
+  textColor,
 }: {
+  backgroundColor: string;
   config: PresswallConfig;
   items: ReturnType<typeof resolveStorefrontPublishers>;
   renderLogo: (item: StorefrontPublisher) => React.ReactNode;
+  textColor: string;
 }) {
   if (items.length === 0) {
     return (
@@ -67,30 +79,38 @@ function LayoutContent({
   }
 
   if (config.layout === "marquee") {
+    const segments = getMarqueeRepeatCount(items.length);
+    const marqueeItems = Array.from({ length: segments }, (_, segment) =>
+      items.map((item) => ({ item, suffix: String(segment) }))
+    ).flat();
+
     return (
-      <div className="overflow-hidden">
-        <div
-          className="presswall-marquee flex w-max items-center"
-          style={{
-            gap: `${config.gap}px`,
-            animationDuration: `${config.marqueeSpeed}s`,
-          }}
+      <MarqueeLayout
+        backgroundColor={backgroundColor}
+        config={config}
+        textColor={textColor}
+      >
+        <MarqueeTrack
+          style={getMarqueeTrackStyle(
+            segments,
+            config.gap,
+            config.marqueeSpeed
+          )}
         >
-          {items
-            .map((item) => ({ item, suffix: "a" as string }))
-            .concat(items.map((item) => ({ item, suffix: "b" as string })))
-            .map(({ item, suffix }) => (
-              <div key={`${item.id}-${suffix}`}>{renderLogo(item)}</div>
-            ))}
-        </div>
-      </div>
+          {marqueeItems.map(({ item, suffix }) => (
+            <div className="pw-mq-item shrink-0" key={`${item.id}-${suffix}`}>
+              {renderLogo(item)}
+            </div>
+          ))}
+        </MarqueeTrack>
+      </MarqueeLayout>
     );
   }
 
   if (config.layout === "grid") {
     return (
       <div
-        className={getLogosRowGridClassName(config.alignment)}
+        className={getLogosRowGridClassName(config.logoAlignment)}
         style={getLogosRowGridStyle(
           getLogosPerRow(config, "desktop"),
           config.gap
@@ -107,7 +127,7 @@ function LayoutContent({
 
   return (
     <div
-      className={getLogosRowGridClassName(config.alignment)}
+      className={getLogosRowGridClassName(config.logoAlignment)}
       style={getLogosRowGridStyle(
         getLogosPerRow(config, "desktop"),
         config.gap
@@ -182,11 +202,13 @@ export function PresswallPreview({
       )}
       style={containerStyle}
     >
-      {config.showHeading && config.headingText ? (
+      {config.showHeading &&
+      config.headingText &&
+      config.layout !== "marquee" ? (
         <p
           className={cn(
             "m-0 font-medium uppercase tracking-[0.28em]",
-            headingAlignmentClass[config.alignment]
+            headingAlignmentClass[config.headingAlignment]
           )}
           style={getHeadingStyle({
             ...config,
@@ -197,7 +219,13 @@ export function PresswallPreview({
         </p>
       ) : null}
 
-      <LayoutContent config={config} items={items} renderLogo={renderLogo} />
+      <LayoutContent
+        backgroundColor={previewColors.backgroundColor}
+        config={config}
+        items={items}
+        renderLogo={renderLogo}
+        textColor={previewColors.textColor}
+      />
     </div>
   );
 

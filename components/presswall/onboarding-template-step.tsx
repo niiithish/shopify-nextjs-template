@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PresswallEditor } from "@/hooks/use-presswall-editor";
 import {
   applyPresswallTemplate,
-  getConfigPreviewTheme,
+  getPresswallTemplate,
   getTemplatePreviewTheme,
   PRESSWALL_TEMPLATES,
   type PresswallTemplate,
@@ -81,30 +81,36 @@ function TemplateRow({
   catalog,
   editor,
   isSelected,
+  onCustomize,
   selections,
   template,
 }: {
   catalog: PresswallEditor["catalog"];
   editor: PresswallEditor;
   isSelected: boolean;
+  onCustomize: () => void;
   selections: PresswallEditor["selections"];
   template: PresswallTemplate;
 }) {
   const previewConfig = applyPresswallTemplate(template.id);
 
+  const selectTemplate = () => editor.applyTemplate(template.id);
+
   return (
-    <button
-      aria-pressed={isSelected}
+    <div
       className={cn(
-        "flex w-full flex-col gap-2.5 rounded-lg border p-2.5 text-left transition-all",
+        "flex w-full flex-col gap-2.5 rounded-lg border p-2.5 transition-all",
         isSelected
           ? "border-foreground/50 bg-muted/50 ring-1 ring-foreground/25"
           : "hover:border-foreground/20 hover:bg-muted/30"
       )}
-      onClick={() => editor.applyTemplate(template.id)}
-      type="button"
     >
-      <div className="relative w-full">
+      <button
+        aria-pressed={isSelected}
+        className="relative w-full text-left"
+        onClick={selectTemplate}
+        type="button"
+      >
         <OnboardingPreview
           catalog={catalog}
           className="pointer-events-none w-full border-black/5 shadow-none"
@@ -119,20 +125,47 @@ function TemplateRow({
             <IconCircleCheck className="size-3.5" stroke={2.5} />
           </span>
         ) : null}
-      </div>
+      </button>
 
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <p className="truncate font-medium text-sm">{template.name}</p>
-          <Badge className="shrink-0 text-[0.625rem]" variant="secondary">
-            {templateLayoutLabel(template)}
-          </Badge>
+          <button
+            aria-pressed={isSelected}
+            className="flex min-w-0 flex-1 items-center gap-2 text-left"
+            onClick={selectTemplate}
+            type="button"
+          >
+            <p className="truncate font-medium text-sm">{template.name}</p>
+            <Badge className="shrink-0 text-[0.625rem]" variant="secondary">
+              {templateLayoutLabel(template)}
+            </Badge>
+          </button>
+
+          {isSelected ? (
+            <Button
+              className="h-7 shrink-0 px-2.5 text-xs"
+              onClick={onCustomize}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              Edit
+            </Button>
+          ) : null}
         </div>
-        <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">
-          {template.description}
-        </p>
+
+        <button
+          aria-pressed={isSelected}
+          className="w-full text-left"
+          onClick={selectTemplate}
+          type="button"
+        >
+          <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">
+            {template.description}
+          </p>
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -145,7 +178,6 @@ export function OnboardingTemplateStep({
     "templates"
   );
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
-  const previewTheme = getConfigPreviewTheme(editor.config);
 
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-3">
@@ -165,7 +197,6 @@ export function OnboardingTemplateStep({
               catalog={editor.catalog}
               config={editor.config}
               deviceMode={deviceMode}
-              previewTheme={previewTheme}
               selections={editor.selections}
             />
           </div>
@@ -179,7 +210,7 @@ export function OnboardingTemplateStep({
             }
             value={activeTab}
           >
-            <div className="shrink-0 border-b px-3 pt-3">
+            <div className="shrink-0 border-b p-3">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="custom">Custom</TabsTrigger>
@@ -198,6 +229,7 @@ export function OnboardingTemplateStep({
                       editor={editor}
                       isSelected={editor.matchedTemplateId === template.id}
                       key={template.id}
+                      onCustomize={() => setActiveTab("custom")}
                       selections={editor.selections}
                       template={template}
                     />
@@ -212,6 +244,11 @@ export function OnboardingTemplateStep({
             >
               <OnboardingTemplateCustomControls
                 config={editor.config}
+                matchedTemplateName={
+                  editor.matchedTemplateId
+                    ? getPresswallTemplate(editor.matchedTemplateId).name
+                    : undefined
+                }
                 onUpdate={editor.updateConfig}
               />
             </TabsContent>

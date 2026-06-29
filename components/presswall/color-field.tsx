@@ -84,12 +84,15 @@ export function ColorField({
         <div
           className={cn(
             "relative size-9 shrink-0 overflow-hidden rounded-md border",
-            isTransparent && "presswall-canvas-bg"
+            isTransparent && "presswall-transparent-swatch"
           )}
         >
           <input
             aria-label={`${label} picker`}
-            className="size-full cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              "size-full cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50",
+              isTransparent && "opacity-0"
+            )}
             id={id}
             onChange={(event) => handlePickerChange(event.target.value)}
             type="color"

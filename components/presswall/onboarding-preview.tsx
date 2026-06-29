@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  MarqueeLayout,
+  MarqueeTrack,
+} from "@/components/presswall/marquee-layout";
 import { PublisherLogo } from "@/components/presswall/publisher-logo";
 import { getHeadingStyle } from "@/lib/presswall-heading-style";
 import {
@@ -12,6 +16,10 @@ import {
   getLogoImageStyle,
   getLogoSlotStyle,
 } from "@/lib/presswall-logo-style";
+import {
+  getMarqueeRepeatCount,
+  getMarqueeTrackStyle,
+} from "@/lib/presswall-marquee";
 import { getPreviewColors } from "@/lib/presswall-preview-colors";
 import { scaleSpacingForPreview } from "@/lib/presswall-spacing";
 import type {
@@ -39,18 +47,27 @@ const headingAlignmentClass = {
   right: "text-right",
 } as const;
 
+/** ~25% smaller than the previous template thumbnail caps. */
+const TEMPLATE_THUMBNAIL_LOGO_HEIGHT_CAP = 12;
+const TEMPLATE_THUMBNAIL_LOGO_MAX_WIDTH = 42;
+const TEMPLATE_THUMBNAIL_PADDING_CAP = 9;
+
 function PreviewLogos({
+  backgroundColor,
   config,
   gap,
   items,
   logosPerRow,
   renderLogo,
+  textColor,
 }: {
+  backgroundColor: string;
   config: PresswallConfig;
   gap: number;
   items: ReturnType<typeof resolveStorefrontPublishers>;
   logosPerRow: number;
   renderLogo: (item: StorefrontPublisher) => React.ReactNode;
+  textColor: string;
 }) {
   if (items.length === 0) {
     return (
@@ -61,23 +78,27 @@ function PreviewLogos({
   }
 
   if (config.layout === "marquee") {
+    const segments = getMarqueeRepeatCount(items.length);
+    const marqueeItems = Array.from({ length: segments }, (_, segment) =>
+      items.map((item) => ({ item, suffix: String(segment) }))
+    ).flat();
+
     return (
-      <div className="overflow-hidden">
-        <div
-          className="presswall-marquee flex w-max items-center"
-          style={{
-            gap: `${gap}px`,
-            animationDuration: `${config.marqueeSpeed}s`,
-          }}
+      <MarqueeLayout
+        backgroundColor={backgroundColor}
+        config={config}
+        textColor={textColor}
+      >
+        <MarqueeTrack
+          style={getMarqueeTrackStyle(segments, gap, config.marqueeSpeed)}
         >
-          {items
-            .map((item) => ({ item, suffix: "a" as string }))
-            .concat(items.map((item) => ({ item, suffix: "b" as string })))
-            .map(({ item, suffix }) => (
-              <div key={`${item.id}-${suffix}`}>{renderLogo(item)}</div>
-            ))}
-        </div>
-      </div>
+          {marqueeItems.map(({ item, suffix }) => (
+            <div className="pw-mq-item shrink-0" key={`${item.id}-${suffix}`}>
+              {renderLogo(item)}
+            </div>
+          ))}
+        </MarqueeTrack>
+      </MarqueeLayout>
     );
   }
 
@@ -86,7 +107,7 @@ function PreviewLogos({
   if (config.layout === "grid") {
     return (
       <div
-        className={getLogosRowGridClassName(config.alignment)}
+        className={getLogosRowGridClassName(config.logoAlignment)}
         style={getLogosRowGridStyle(logosPerRow, gap)}
       >
         {rowItems.map((item) => (
@@ -100,7 +121,7 @@ function PreviewLogos({
 
   return (
     <div
-      className={getLogosRowGridClassName(config.alignment)}
+      className={getLogosRowGridClassName(config.logoAlignment)}
       style={getLogosRowGridStyle(logosPerRow, gap)}
     >
       {rowItems.map((item) => (
@@ -126,36 +147,49 @@ export function OnboardingPreview({
   const previewColors = getPreviewColors(config, isDark);
   const logoStyle = getLogoImageStyle(config, { previewIsDark: isDark });
   const isLivePreview = scale === "lg" && deviceMode !== undefined;
+  const isTemplateThumbnail = scale === "sm";
 
   const viewport = deviceMode ?? "desktop";
   const logosPerRow = getLogosPerRow(config, viewport);
   const logoHeight = isLivePreview
     ? config.logoHeight
-    : Math.min(config.logoHeight, 16);
+    : Math.min(
+        config.logoHeight,
+        isTemplateThumbnail ? TEMPLATE_THUMBNAIL_LOGO_HEIGHT_CAP : 16
+      );
   const gap = isLivePreview
     ? config.gap
     : scaleSpacingForPreview(config.gap, config.logoHeight, logoHeight);
   const paddingY = isLivePreview
     ? config.paddingY
-    : Math.min(config.paddingY, 12);
+    : Math.min(
+        config.paddingY,
+        isTemplateThumbnail ? TEMPLATE_THUMBNAIL_PADDING_CAP : 12
+      );
   const paddingX = isLivePreview
     ? config.paddingX
-    : Math.min(config.paddingX, 12);
+    : Math.min(
+        config.paddingX,
+        isTemplateThumbnail ? TEMPLATE_THUMBNAIL_PADDING_CAP : 12
+      );
 
-  const renderLogo = (item: StorefrontPublisher) => {
-    const maxWidth = isLivePreview ? 200 : 56;
+  let logoMaxWidth = 56;
+  if (isLivePreview) {
+    logoMaxWidth = 200;
+  } else if (isTemplateThumbnail) {
+    logoMaxWidth = TEMPLATE_THUMBNAIL_LOGO_MAX_WIDTH;
+  }
 
-    return (
-      <PublisherLogo
-        customLogoSvg={item.isCustom ? item.logoSvg || undefined : undefined}
-        key={item.id}
-        logoImageUrl={item.logoImageUrl}
-        name={item.name}
-        publisherId={item.isCustom ? undefined : item.id}
-        style={getLogoSlotStyle(logoHeight, maxWidth, logoStyle)}
-      />
-    );
-  };
+  const renderLogo = (item: StorefrontPublisher) => (
+    <PublisherLogo
+      customLogoSvg={item.isCustom ? item.logoSvg || undefined : undefined}
+      key={item.id}
+      logoImageUrl={item.logoImageUrl}
+      name={item.name}
+      publisherId={item.isCustom ? undefined : item.id}
+      style={getLogoSlotStyle(logoHeight, logoMaxWidth, logoStyle)}
+    />
+  );
 
   return (
     <div
@@ -167,18 +201,23 @@ export function OnboardingPreview({
         padding: `${paddingY}px ${paddingX}px`,
       }}
     >
-      {config.showHeading && config.headingText ? (
+      {config.showHeading &&
+      config.headingText &&
+      config.layout !== "marquee" ? (
         <p
           className={cn(
             "m-0 font-medium uppercase tracking-[0.28em]",
-            headingAlignmentClass[config.alignment]
+            headingAlignmentClass[config.headingAlignment]
           )}
           style={getHeadingStyle(
             {
               ...config,
               textColor: previewColors.textColor,
             },
-            { compact: !isLivePreview }
+            {
+              compact: !isLivePreview,
+              compactFontSizeCap: isTemplateThumbnail ? 6 : 8,
+            }
           )}
         >
           {config.headingText}
@@ -186,11 +225,13 @@ export function OnboardingPreview({
       ) : null}
 
       <PreviewLogos
+        backgroundColor={previewColors.backgroundColor}
         config={config}
         gap={gap}
         items={items}
         logosPerRow={logosPerRow}
         renderLogo={renderLogo}
+        textColor={previewColors.textColor}
       />
     </div>
   );

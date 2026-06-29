@@ -3,13 +3,7 @@ import { isDarkBackgroundColor } from "@/lib/presswall-logo-contrast";
 import { withDerivedSpacing } from "@/lib/presswall-spacing";
 import type { PresswallConfig } from "@/lib/presswall-types";
 
-export type PresswallTemplateId =
-  | "classic"
-  | "dark"
-  | "marquee"
-  | "grid"
-  | "editorial"
-  | "soft-card";
+export type PresswallTemplateId = "classic" | "dark" | "marquee" | "soft-card";
 
 export interface PresswallTemplate {
   config: Partial<PresswallConfig>;
@@ -28,7 +22,8 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       showHeading: true,
       colorMode: "mono",
       layout: "bar",
-      alignment: "center",
+      headingAlignment: "center",
+      logoAlignment: "center",
       backgroundColor: "transparent",
       textColor: "#111111",
       borderRadius: 0,
@@ -47,7 +42,8 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       showHeading: true,
       colorMode: "mono",
       layout: "bar",
-      alignment: "center",
+      headingAlignment: "center",
+      logoAlignment: "center",
       backgroundColor: "#0a0a0a",
       textColor: "#fafafa",
       borderRadius: 0,
@@ -58,63 +54,25 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
     },
   },
   {
-    id: "editorial",
-    name: "Editorial",
-    description: "Left-aligned label with muted logos for a magazine feel.",
-    config: {
-      headingText: "Press mentions",
-      showHeading: true,
-      colorMode: "muted",
-      layout: "bar",
-      alignment: "left",
-      backgroundColor: "transparent",
-      textColor: "#111111",
-      borderRadius: 0,
-      paddingY: 12,
-      paddingX: 0,
-      logoHeight: 28,
-      headingFontSize: 16,
-      grayscaleOpacity: 60,
-    },
-  },
-  {
     id: "marquee",
     name: "Auto-scroll",
     description: "Continuous scroll — great when you have many outlets.",
     config: {
-      showHeading: false,
+      headingText: "Featured in",
+      showHeading: true,
       colorMode: "mono",
       layout: "marquee",
-      alignment: "center",
+      headingAlignment: "left",
+      logoAlignment: "left",
       backgroundColor: "transparent",
       textColor: "#111111",
+      headingFontSize: 14,
       borderRadius: 0,
       paddingY: 16,
       paddingX: 16,
-      logoHeight: 28,
+      logoHeight: 20,
+      gap: 50,
       marqueeSpeed: 30,
-    },
-  },
-  {
-    id: "grid",
-    name: "Grid",
-    description: "Even grid with soft grayscale logos.",
-    config: {
-      headingText: "As seen on",
-      showHeading: true,
-      colorMode: "muted",
-      layout: "grid",
-      alignment: "center",
-      backgroundColor: "transparent",
-      textColor: "#111111",
-      borderRadius: 0,
-      paddingY: 20,
-      paddingX: 16,
-      logoHeight: 32,
-      logosPerRowDesktop: 3,
-      logosPerRowMobile: 2,
-      headingFontSize: 16,
-      grayscaleOpacity: 70,
     },
   },
   {
@@ -126,7 +84,8 @@ export const PRESSWALL_TEMPLATES: PresswallTemplate[] = [
       showHeading: true,
       colorMode: "muted",
       layout: "bar",
-      alignment: "center",
+      headingAlignment: "center",
+      logoAlignment: "center",
       backgroundColor: "#f4f4f5",
       textColor: "#18181b",
       borderRadius: 12,
@@ -170,10 +129,20 @@ export function applyPresswallTemplate(
   templateId: PresswallTemplateId
 ): PresswallConfig {
   const template = getPresswallTemplate(templateId);
-  return withDerivedSpacing({
+  const explicitGap = template.config.gap;
+  const explicitHeadingSpacing = template.config.headingSpacing;
+  const resolved = withDerivedSpacing({
     ...DEFAULT_PRESSWALL_CONFIG,
     ...template.config,
   });
+
+  return {
+    ...resolved,
+    ...(explicitGap === undefined ? {} : { gap: explicitGap }),
+    ...(explicitHeadingSpacing === undefined
+      ? {}
+      : { headingSpacing: explicitHeadingSpacing }),
+  };
 }
 
 const PRESSWALL_CONFIG_KEYS = Object.keys(

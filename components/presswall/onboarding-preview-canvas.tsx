@@ -16,7 +16,6 @@ interface OnboardingPreviewCanvasProps {
   catalog: PublisherCatalogItem[];
   config: PresswallConfig;
   deviceMode: DeviceMode;
-  previewTheme: "light" | "dark";
   selections: ShopPublisherSelection[];
 }
 
@@ -26,7 +25,6 @@ export function OnboardingPreviewCanvas({
   catalog,
   config,
   deviceMode,
-  previewTheme,
   selections,
 }: OnboardingPreviewCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,10 +80,7 @@ export function OnboardingPreviewCanvas({
 
   return (
     <div
-      className={cn(
-        "presswall-canvas-bg-dots relative h-full w-full overflow-auto",
-        previewTheme === "dark" && "presswall-canvas-bg-dots-dark"
-      )}
+      className="presswall-canvas-bg-dots relative h-full w-full overflow-auto"
       ref={containerRef}
     >
       <div className="flex min-h-full items-center justify-center p-6">
@@ -109,7 +104,6 @@ export function OnboardingPreviewCanvas({
               className="border-black/10 shadow-sm"
               config={config}
               deviceMode={deviceMode}
-              previewTheme={previewTheme}
               scale="lg"
               selections={selections}
             />
