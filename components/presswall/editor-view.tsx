@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { EditorShellSkeleton } from "@/components/presswall/editor-shell-skeleton";
 import { EditorWorkspace } from "@/components/presswall/editor-workspace";
-import { OnboardingShellSkeleton } from "@/components/presswall/onboarding-shell-skeleton";
 import { ThemeActivationBanner } from "@/components/presswall/theme-activation-banner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export function EditorView() {
   }, [editor.isLoading, editor.needsOnboarding]);
 
   if (editor.isLoading || editor.needsOnboarding) {
-    return <OnboardingShellSkeleton />;
+    return <EditorShellSkeleton />;
   }
 
   if (editor.loadError) {

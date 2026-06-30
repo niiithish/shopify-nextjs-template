@@ -4,7 +4,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PresswallAppNav } from "@/components/presswall/app-nav";
 import { SessionBootstrap } from "@/components/session-bootstrap";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -56,12 +55,10 @@ export default function RootLayout({
       <body>
         <PresswallAppNav />
         <SessionBootstrap />
-        <ThemeProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster richColors />
-          </TooltipProvider>
-        </ThemeProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster richColors />
+        </TooltipProvider>
       </body>
     </html>
   );

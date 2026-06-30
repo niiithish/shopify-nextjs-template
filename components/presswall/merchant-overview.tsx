@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { navigateAdminPath } from "@/lib/admin-navigation";
+import { useAdminNavigation } from "@/hooks/use-admin-navigation";
 import type { MerchantOverviewData } from "@/lib/merchant-overview-data";
 import type { PresswallViewport } from "@/lib/presswall-layout-style";
 
@@ -231,6 +231,7 @@ function ThemePlacementCard() {
 
 export function MerchantOverview({ data }: MerchantOverviewProps) {
   const [deviceMode, setDeviceMode] = useState<PresswallViewport>("desktop");
+  const { isNavigating, navigate } = useAdminNavigation();
 
   return (
     <div className="flex h-svh flex-col overflow-hidden bg-background">
@@ -257,14 +258,19 @@ export function MerchantOverview({ data }: MerchantOverviewProps) {
               <div className="flex items-center gap-2">
                 <DeviceToggle mode={deviceMode} onChange={setDeviceMode} />
                 <Button
+                  disabled={isNavigating}
                   onClick={() => {
-                    navigateAdminPath("/editor").catch(() => undefined);
+                    navigate("/editor").catch(() => undefined);
                   }}
                   size="sm"
                   type="button"
                 >
-                  <IconEdit stroke={2} />
-                  Open editor
+                  {isNavigating ? (
+                    <IconLoader2 className="size-4 animate-spin" stroke={2} />
+                  ) : (
+                    <IconEdit stroke={2} />
+                  )}
+                  {isNavigating ? "Opening..." : "Open editor"}
                 </Button>
               </div>
             </div>

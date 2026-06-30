@@ -1,8 +1,8 @@
 "use client";
 
+import { HomeShellSkeleton } from "@/components/presswall/home-shell-skeleton";
 import { MerchantOverview } from "@/components/presswall/merchant-overview";
 import { OnboardingAdminView } from "@/components/presswall/onboarding-admin-view";
-import { OnboardingShellSkeleton } from "@/components/presswall/onboarding-shell-skeleton";
 import { ThemeActivationProvider } from "@/components/presswall/theme-activation-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import { merchantOverviewFromEditor } from "@/lib/merchant-overview-data";
 
 export function AdminDashboardView({ editor }: { editor: PresswallEditor }) {
   if (editor.isLoading) {
-    return <OnboardingShellSkeleton />;
+    return <HomeShellSkeleton />;
   }
 
   if (editor.loadError) {
