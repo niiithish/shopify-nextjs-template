@@ -27,6 +27,7 @@ interface SaveTemplateDialogProps {
   onSaved: (name: string) => void;
   open: boolean;
   selections: ShopPublisherSelection[];
+  showPlacementHint?: boolean;
 }
 
 export function SaveTemplateDialog({
@@ -35,6 +36,7 @@ export function SaveTemplateDialog({
   config,
   onSaved,
   selections,
+  showPlacementHint = false,
 }: SaveTemplateDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -98,7 +100,9 @@ export function SaveTemplateDialog({
         <DialogHeader>
           <DialogTitle>Save template</DialogTitle>
           <DialogDescription>
-            Save your custom design so you can reuse it later in Presswall.
+            {showPlacementHint
+              ? "Save your design as a banner you can reload from Templates. Use the By page tab to choose where this banner appears on your store."
+              : "Save your design as a banner you can reload from Templates later in the editor."}
           </DialogDescription>
         </DialogHeader>
 

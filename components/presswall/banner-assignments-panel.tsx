@@ -72,7 +72,7 @@ export function BannerAssignmentsPanel({
         }))
       );
     } catch {
-      toast.error("Could not load banner placements");
+      toast.error("Could not load page assignments");
     } finally {
       setIsLoading(false);
     }
@@ -150,14 +150,14 @@ export function BannerAssignmentsPanel({
       });
 
       if (!response.ok) {
-        toast.error("Could not save banner placements");
+        toast.error("Could not save page assignments");
         return;
       }
 
-      toast.success("Banner placements saved");
+      toast.success("Page assignments saved");
       onSaved?.();
     } catch {
-      toast.error("Could not save banner placements");
+      toast.error("Could not save page assignments");
     } finally {
       setIsSaving(false);
     }
@@ -166,15 +166,22 @@ export function BannerAssignmentsPanel({
   if (isLoading) {
     return (
       <div className="p-4 text-muted-foreground text-sm">
-        Loading placements…
+        Loading page assignments…
       </div>
     );
   }
 
   if (banners.length === 0) {
     return (
-      <div className="p-4 text-muted-foreground text-sm">
-        Save a template first to assign banners to pages.
+      <div className="space-y-2 p-4">
+        <p className="font-medium text-sm">
+          Show different banners on different pages
+        </p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Save your design in the Templates tab first. Each saved banner can
+          then be assigned to your homepage, product pages, or individual
+          products here.
+        </p>
       </div>
     );
   }
@@ -182,6 +189,17 @@ export function BannerAssignmentsPanel({
   return (
     <ScrollArea className="min-h-0 flex-1">
       <div className="space-y-5 p-3">
+        <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+          <p className="font-medium text-sm">
+            Show different banners on different pages
+          </p>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Save multiple banners in Templates, then pick which one appears on
+            your homepage, all product pages, or specific products. Shoppers
+            only see the banner assigned to the page they are on.
+          </p>
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="homepage-banner">Homepage</Label>
           <Select
@@ -305,7 +323,7 @@ export function BannerAssignmentsPanel({
           onClick={handleSave}
           type="button"
         >
-          {isSaving ? "Saving..." : "Save placements"}
+          {isSaving ? "Saving..." : "Save page assignments"}
         </Button>
       </div>
     </ScrollArea>

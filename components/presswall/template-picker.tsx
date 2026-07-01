@@ -1,11 +1,11 @@
 "use client";
 
 import { IconCircleCheck } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { OnboardingPreview } from "@/components/presswall/onboarding-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import type { PresswallEditor } from "@/hooks/use-presswall-editor";
 import type { ShopCustomTemplate } from "@/lib/custom-template-service";
 import {
@@ -26,7 +26,32 @@ interface TemplatePickerProps {
   onApply: (templateId: PresswallTemplateId) => void;
   onApplyCustom: (templateId: string) => void;
   onCustomize?: () => void;
+  onGoToPlacement?: () => void;
   selections: PresswallEditor["selections"];
+}
+
+function TemplateSectionHeader({
+  action,
+  description,
+  title,
+}: {
+  action?: ReactNode;
+  description?: string;
+  title: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="font-semibold text-sm">{title}</h3>
+        {action}
+      </div>
+      {description ? (
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 function templateLayoutLabel(layout: PresswallTemplate["config"]["layout"]) {
@@ -143,16 +168,44 @@ export function TemplatePicker({
   onApply,
   onApplyCustom,
   onCustomize,
+  onGoToPlacement,
   selections,
 }: TemplatePickerProps) {
+  const placementAction = onGoToPlacement ? (
+    <Button
+      className="h-auto shrink-0 px-0 text-xs"
+      onClick={onGoToPlacement}
+      type="button"
+      variant="link"
+    >
+      Assign to pages
+    </Button>
+  ) : null;
+
+  let builtInTemplatesDescription =
+    "Pick a starting look, then customize outlets and styling. Use Save as template to keep your design for later.";
+  if (customTemplates.length > 0) {
+    builtInTemplatesDescription =
+      "Starting points from Presswall. Apply one, then customize outlets and styling.";
+  } else if (onGoToPlacement) {
+    builtInTemplatesDescription =
+      "Pick a starting look, then customize outlets and styling. Use Save as template to keep your design and assign it to specific pages.";
+  }
+
   return (
     <ScrollArea className="min-h-0 flex-1">
-      <div className="space-y-2 p-3">
+      <div className="space-y-3 p-3">
         {customTemplates.length > 0 ? (
-          <>
-            <p className="px-0.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-              Saved banners
-            </p>
+          <section className="space-y-2">
+            <TemplateSectionHeader
+              action={placementAction}
+              description={
+                onGoToPlacement
+                  ? "Banners you saved from the editor. Use Assign to pages to choose which banner shows on your homepage, product pages, or individual products."
+                  : "Banners you saved from the editor. You can assign them to pages later from the editor."
+              }
+              title="Saved banners"
+            />
             {customTemplates.map((template) => (
               <TemplateRow
                 catalog={catalog}
@@ -171,25 +224,35 @@ export function TemplatePicker({
                 templateName={template.name}
               />
             ))}
-            <Separator className="my-3" />
-          </>
+          </section>
         ) : null}
 
-        {PRESSWALL_TEMPLATES.map((template) => (
-          <TemplateRow
-            catalog={catalog}
-            customLogos={customLogos}
-            isSelected={matchedTemplateId === template.id}
-            key={template.id}
-            layoutLabel={templateLayoutLabel(template.config.layout)}
-            onApply={() => onApply(template.id)}
-            onCustomize={onCustomize}
-            previewConfig={applyPresswallTemplate(template.id)}
-            previewSelections={selections}
-            subtitle={template.description}
-            templateName={template.name}
+        <section
+          className={
+            customTemplates.length > 0 ? "space-y-2 border-t pt-4" : "space-y-2"
+          }
+        >
+          <TemplateSectionHeader
+            action={customTemplates.length === 0 ? placementAction : undefined}
+            description={builtInTemplatesDescription}
+            title="Built-in templates"
           />
-        ))}
+          {PRESSWALL_TEMPLATES.map((template) => (
+            <TemplateRow
+              catalog={catalog}
+              customLogos={customLogos}
+              isSelected={matchedTemplateId === template.id}
+              key={template.id}
+              layoutLabel={templateLayoutLabel(template.config.layout)}
+              onApply={() => onApply(template.id)}
+              onCustomize={onCustomize}
+              previewConfig={applyPresswallTemplate(template.id)}
+              previewSelections={selections}
+              subtitle={template.description}
+              templateName={template.name}
+            />
+          ))}
+        </section>
       </div>
     </ScrollArea>
   );

@@ -79,7 +79,7 @@ export function EditorWorkspace({ editor }: EditorWorkspaceProps) {
                 </TabsTrigger>
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="custom">Custom</TabsTrigger>
-                <TabsTrigger value="placement">Placement</TabsTrigger>
+                <TabsTrigger value="placement">By page</TabsTrigger>
               </TabsList>
             </div>
 
@@ -130,6 +130,7 @@ export function EditorWorkspace({ editor }: EditorWorkspaceProps) {
                   onApply={editor.applyTemplate}
                   onApplyCustom={editor.applyCustomBanner}
                   onCustomize={() => setActiveTab("custom")}
+                  onGoToPlacement={() => setActiveTab("placement")}
                   selections={editor.selections}
                 />
               </div>
@@ -192,6 +193,7 @@ export function EditorWorkspace({ editor }: EditorWorkspaceProps) {
         }}
         open={saveDialogOpen}
         selections={editor.selections}
+        showPlacementHint
       />
     </div>
   );
