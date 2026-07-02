@@ -7,42 +7,35 @@ import {
   useVideoConfig,
 } from "remotion";
 import { GEIST_FONT } from "../fonts";
-import { DASHBOARD_VIDEO } from "../video-config";
+import { DASHBOARD_VIDEO, DASHBOARD_VIDEO_FRAMES } from "../video-config";
 
-export function DashboardClip({
-  endFrame,
-  startFrame,
-}: {
-  endFrame: number;
-  startFrame: number;
-}) {
+/**
+ * Must be rendered inside a <Sequence from={…} durationInFrames={…}> so
+ * OffthreadVideo starts at frame 0 of the source, not the global timeline.
+ */
+export function DashboardClip() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  if (frame < startFrame || frame >= endFrame) {
-    return null;
-  }
-
-  const localFrame = frame - startFrame;
   const sceneOpacity = interpolate(
     frame,
-    [startFrame, startFrame + 12, endFrame - 8, endFrame],
+    [0, 12, DASHBOARD_VIDEO_FRAMES - 8, DASHBOARD_VIDEO_FRAMES],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
-  const titleOpacity = interpolate(localFrame, [0, 70, 100], [1, 1, 0], {
+  const titleOpacity = interpolate(frame, [0, 70, 100], [1, 1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   const titleScale = spring({
     fps,
-    frame: localFrame,
+    frame,
     config: { damping: 10, mass: 0.35, stiffness: 300 },
   });
 
-  const frameScale = interpolate(localFrame, [8, 20], [0.97, 1], {
+  const frameScale = interpolate(frame, [8, 20], [0.97, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });

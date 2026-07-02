@@ -1,6 +1,7 @@
 import {
   AbsoluteFill,
   interpolate,
+  Sequence,
   spring,
   useCurrentFrame,
   useVideoConfig,
@@ -115,16 +116,15 @@ function TemplatesScene() {
 }
 
 function CustomScene() {
-  const frame = useCurrentFrame();
-
-  if (frame < CUSTOM_START || frame >= CTA_START) {
-    return null;
-  }
-
   return (
-    <AbsoluteFill style={{ background: "#fafafa", fontFamily: GEIST_FONT }}>
-      <DashboardClip endFrame={CUSTOM_END} startFrame={CUSTOM_START} />
-    </AbsoluteFill>
+    <Sequence
+      durationInFrames={DASHBOARD_VIDEO_FRAMES}
+      from={CUSTOM_START}
+    >
+      <AbsoluteFill style={{ background: "#fafafa", fontFamily: GEIST_FONT }}>
+        <DashboardClip />
+      </AbsoluteFill>
+    </Sequence>
   );
 }
 

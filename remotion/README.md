@@ -35,6 +35,8 @@ Requires [FFmpeg](https://ffmpeg.org/) on your PATH.
 
 Assets symlinked from the main app: `public/brand/`, `public/publishers/`, and `public/video/`.
 
+The dashboard clip is wrapped in a Remotion `<Sequence>` so `OffthreadVideo` starts at frame 0 of the source file (not the global composition timeline).
+
 ## Add music
 
 Drop your track into Remotion Studio or mux after render:
